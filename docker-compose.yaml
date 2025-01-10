@@ -1,0 +1,12 @@
+services:
+  project:
+    container_name: siththara-project
+    entrypoint: /bin/sh
+    image: dendyard/vimdev:alpine-node-18-js-ts
+    volumes:
+      - .:/home/node/siththara
+    stdin_open: true
+    tty: true
+    user: node
+    ports:
+      - 8080:8080

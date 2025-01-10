@@ -1,0 +1,28 @@
+{
+	"name": "Node.js & TypeScript",
+	"image": "node:20-slim",
+	"features": {
+		"ghcr.io/devcontainers-contrib/features/vue-cli:2": {}
+	},
+	"containerEnv": {
+		"ENV_VAR": ""
+	},
+	"mounts": [
+		"source=${env:HOME}${env:USERPROFILE}/.vim,target=/home/node/.vim,type=bind"
+	],
+	"portsAttributes": {
+		"8080": {
+			"label": "8080"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"Wscats.vue"
+			]
+		}
+	},
+	"runArgs": [
+		"--network=host"
+	]
+}

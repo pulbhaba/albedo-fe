@@ -1,0 +1,11 @@
+{
+    "login": {
+        "title": "Siththara Login",
+        "email": "Email Address",
+        "password": "Password",
+        "passwordPrompt": "Enter your password",
+        "loginBtn": "Login",
+        "forgotPassword": "Forgot Password?",
+        "errorMessage": "Invalid username or password. Please try again."
+    }
+}
