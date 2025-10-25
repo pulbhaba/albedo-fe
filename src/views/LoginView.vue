@@ -76,42 +76,42 @@
 </template>
 
 <script>
-import { mapActions } from 'pinia';
-import { useAuthStore } from '@/store/auth';
+import { mapActions } from 'pinia'
+import { useAuthStore } from '@/store/auth'
 
 export default {
-  data() {
-    return {
-      username: '',
-      password: '',
-      errorMessage: null,
-    };
-  },
-  methods: {
-    ...mapActions(useAuthStore, ['login']),
-    async handleLogin() {
-      try {
-        const credentials = {
-          username: this.username,
-          password: this.password,
-        };
-
-        // Make API call to authenticate user
-        await this.login(credentials);
-
-        // After successful login, redirect to dashboard or home page
-        this.$router.push('/dashboard');
-      } catch (error) {
-        // Handle error (e.g., invalid credentials)
-        this.errorMessage = this.$t('login.errorMessage');
-      }
+    data () {
+        return {
+            username: '',
+            password: '',
+            errorMessage: null
+        }
     },
-    forgotPassword() {
-      // Handle "Forgot Password" logic (e.g., navigate to password reset page)
-      this.$router.push('/forgot-password');
-    },
-  },
-};
+    methods: {
+        ...mapActions(useAuthStore, ['login']),
+        async handleLogin () {
+            try {
+                const credentials = {
+                    username: this.username,
+                    password: this.password
+                }
+
+                // Make API call to authenticate user
+                await this.login(credentials)
+
+                // After successful login, redirect to dashboard or home page
+                this.$router.push('/dashboard')
+            } catch (error) {
+                // Handle error (e.g., invalid credentials)
+                this.errorMessage = this.$t('login.errorMessage')
+            }
+        },
+        forgotPassword () {
+            // Handle "Forgot Password" logic (e.g., navigate to password reset page)
+            this.$router.push('/forgot-password')
+        }
+    }
+}
 </script>
 
 <style scoped>

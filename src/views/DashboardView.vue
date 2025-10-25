@@ -7,16 +7,16 @@
 </template>
 
 <script>
-import { mapActions } from 'pinia';
-import { useAuthStore } from '@/store/auth';
+import { mapActions } from 'pinia'
+import { useAuthStore } from '@/store/auth'
 
 export default {
-  methods: {
-    ...mapActions(useAuthStore, ['logout']),
-    handleLogout() {
-      this.logout();
-      this.$router.push('/login');
-    },
-  },
-};
+    methods: {
+        ...mapActions(useAuthStore, ['logout']),
+        handleLogout () {
+            this.logout()
+            this.$router.push('/login')
+        }
+    }
+}
 </script>
