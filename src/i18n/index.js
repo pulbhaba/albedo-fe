@@ -7,11 +7,11 @@ import si from './si.json'
 
 // Create vue-i18n instance
 const i18n = createI18n({
-    locale: 'si', // Default language
-    messages: {
-        en, // English translations
-        si // Sinhala translations
-    }
+  locale: 'si', // Default language
+  messages: {
+    en, // English translations
+    si // Sinhala translations
+  }
 })
 
 export default i18n
