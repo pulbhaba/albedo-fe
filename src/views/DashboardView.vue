@@ -7,11 +7,12 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions } from 'pinia';
+import { useAuthStore } from '@/store/auth';
 
 export default {
   methods: {
-    ...mapActions(['logout']),
+    ...mapActions(useAuthStore, ['logout']),
     handleLogout() {
       this.logout();
       this.$router.push('/login');

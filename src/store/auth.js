@@ -1,54 +1,26 @@
 import axios from 'axios';
+import { defineStore } from 'pinia';
 
-const apiClient = axios.create({
-    baseURL: process.env.VUE_APP_API_URL,
-});
-
-apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config;
-
-        // Check if the error is 401 Unauthorized and there's a refresh token available
-        if (error.response.status === 401 && originalRequest.url !== '/oauth/token') {
-            // Attempt to refresh the token
-            const store = require('@/store').default;
-            try {
-                await store.dispatch('auth/refreshToken');
-                // Retry the original request with the new access token
-                return apiClient(originalRequest);
-            } catch (refreshError) {
-                // If refresh fails, logout the user
-                store.dispatch('auth/logout');
-                return Promise.reject(refreshError);
-            }
-        }
-        return Promise.reject(error);
-    }
-);
-
-export default {
-    state: {
+export const useAuthStore = defineStore('auth', {
+    state: () => ({
         accessToken: null,
         refreshToken: null,
         isAuthenticated: false,
-    },
-    mutations: {
-        SET_TOKENS(state, tokens) {
-            state.accessToken = tokens.access_token;
-            state.refreshToken = tokens.refresh_token;
-            state.isAuthenticated = true;
+    }),
+    actions: {
+        setTokens(tokens) {
+            this.accessToken = tokens.access_token;
+            this.refreshToken = tokens.refresh_token;
+            this.isAuthenticated = true;
             axios.defaults.headers.common['Authorization'] = `Bearer ${tokens.access_token}`;
         },
-        LOGOUT(state) {
-            state.accessToken = null;
-            state.refreshToken = null;
-            state.isAuthenticated = false;
+        clearSession() {
+            this.accessToken = null;
+            this.refreshToken = null;
+            this.isAuthenticated = false;
             delete axios.defaults.headers.common['Authorization'];
         },
-    },
-    actions: {
-        async login({ commit }, credentials) {
+        async login(credentials) {
             const response = await axios.post(`${process.env.VUE_APP_API_URL}/oauth/token`, {
                 grant_type: 'password',
                 client_id: process.env.VUE_APP_CLIENT_ID,
@@ -56,16 +28,11 @@ export default {
                 username: credentials.username,
                 password: credentials.password,
             });
-            // const response = {
-            //     data: {
-            //         access_token: "test-access" + credentials.password,
-            //         refresh_token: "test-refresh"
-            //     }
-            // }
-            commit('SET_TOKENS', response.data);
+
+            this.setTokens(response.data);
         },
-        async refreshToken({ state, commit }) {
-            if (!state.refreshToken) {
+        async refreshToken() {
+            if (!this.refreshToken) {
                 throw new Error('No refresh token available');
             }
 
@@ -73,12 +40,52 @@ export default {
                 grant_type: 'refresh_token',
                 client_id: process.env.VUE_APP_CLIENT_ID,
                 client_secret: process.env.VUE_APP_CLIENT_SECRET,
-                refresh_token: state.refreshToken,
+                refresh_token: this.refreshToken,
             });
-            commit('SET_TOKENS', response.data);
+
+            this.setTokens(response.data);
         },
-        async logout({ commit }) {
-            commit('LOGOUT');
+        logout() {
+            this.clearSession();
         },
     },
-};
+});
+
+let interceptorsRegistered = false;
+
+export function setupAuthInterceptors(pinia) {
+    if (interceptorsRegistered) {
+        return;
+    }
+
+    interceptorsRegistered = true;
+
+    axios.interceptors.response.use(
+        (response) => response,
+        async (error) => {
+            const originalRequest = error?.config;
+            const requestUrl = originalRequest?.url ?? '';
+
+            if (
+                error?.response?.status === 401 &&
+                originalRequest &&
+                !requestUrl.includes('/oauth/token') &&
+                !originalRequest._retry
+            ) {
+                originalRequest._retry = true;
+
+                const authStore = useAuthStore(pinia);
+
+                try {
+                    await authStore.refreshToken();
+                    return axios(originalRequest);
+                } catch (refreshError) {
+                    authStore.logout();
+                    return Promise.reject(refreshError);
+                }
+            }
+
+            return Promise.reject(error);
+        }
+    );
+}

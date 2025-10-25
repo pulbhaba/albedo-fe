@@ -76,7 +76,8 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions } from 'pinia';
+import { useAuthStore } from '@/store/auth';
 
 export default {
   data() {
@@ -87,7 +88,7 @@ export default {
     };
   },
   methods: {
-    ...mapActions(['login']),
+    ...mapActions(useAuthStore, ['login']),
     async handleLogin() {
       try {
         const credentials = {
