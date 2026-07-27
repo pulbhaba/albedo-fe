@@ -1,22 +1,49 @@
 <template>
-  <div class="max-w-7xl mx-auto p-4">
-    <h1 class="text-4xl font-bold mb-6">Welcome to Siththara Dashboard</h1>
-    <p class="text-lg">Here you can manage your comics, view stats, and more.</p>
-    <button @click="handleLogout" class="btn-primary mt-4">Logout</button>
+  <div class="space-y-6">
+    <section>
+      <p class="text-sm font-medium uppercase tracking-wide text-emerald-700">Workspace</p>
+      <h1 class="mt-2 text-3xl font-semibold tracking-normal text-slate-950">Dashboard</h1>
+    </section>
+
+    <section class="grid gap-4 md:grid-cols-3">
+      <router-link
+        to="/books"
+        class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow"
+      >
+        <p class="text-sm font-medium text-slate-500">Library</p>
+        <h2 class="mt-2 text-xl font-semibold text-slate-950">Read books</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-600">3 active titles</p>
+      </router-link>
+
+      <router-link
+        to="/books"
+        class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-300 hover:shadow"
+      >
+        <p class="text-sm font-medium text-slate-500">Writing</p>
+        <h2 class="mt-2 text-xl font-semibold text-slate-950">Draft novels</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-600">Available to every account</p>
+      </router-link>
+
+      <router-link
+        v-if="canApprovePromotions"
+        to="/promotions"
+        class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:border-amber-300 hover:shadow"
+      >
+        <p class="text-sm font-medium text-slate-500">Admin</p>
+        <h2 class="mt-2 text-xl font-semibold text-slate-950">Promotion approvals</h2>
+        <p class="mt-3 text-sm leading-6 text-slate-600">2 pending requests</p>
+      </router-link>
+    </section>
   </div>
 </template>
 
 <script>
-import { mapActions } from 'pinia';
+import { mapState } from 'pinia';
 import { useAuthStore } from '@/store/auth';
 
 export default {
-  methods: {
-    ...mapActions(useAuthStore, ['logout']),
-    async handleLogout() {
-      await this.logout();
-      this.$router.push('/login');
-    },
+  computed: {
+    ...mapState(useAuthStore, ['canApprovePromotions']),
   },
 };
 </script>

@@ -5,8 +5,9 @@ const backendTarget = process.env.VUE_APP_BACKEND_PROXY_TARGET || 'http://localh
 module.exports = defineConfig({
   transpileDependencies: true,
   devServer: {
+    port: Number(process.env.VUE_APP_DEV_SERVER_PORT) || 8081,
     proxy: {
-      '^/(oauth2|public|user|actuator)': {
+      '^/(oauth2|public|user|admin|books|actuator)': {
         target: backendTarget,
         changeOrigin: true,
       },
