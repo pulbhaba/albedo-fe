@@ -1,7 +1,8 @@
 {
     "login": {
         "title": "සිත්තරා ප්‍රවිෂ්ඨය",
-        "email": "ඊමේල් ලිපිනය",
+        "username": "පරිශීලක නාමය",
+        "usernamePrompt": "පරිශීලක නාමය ඇතුලු කරන්න",
         "password": "මුරපදය",
         "passwordPrompt": "මුරපදය ඇතුලු කරන්න",
         "loginBtn": "ඇතුලු වන්න",

@@ -1,7 +1,8 @@
 {
     "login": {
         "title": "Siththara Login",
-        "email": "Email Address",
+        "username": "Username",
+        "usernamePrompt": "Enter your username",
         "password": "Password",
         "passwordPrompt": "Enter your password",
         "loginBtn": "Login",

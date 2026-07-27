@@ -13,8 +13,8 @@ import { useAuthStore } from '@/store/auth';
 export default {
   methods: {
     ...mapActions(useAuthStore, ['logout']),
-    handleLogout() {
-      this.logout();
+    async handleLogout() {
+      await this.logout();
       this.$router.push('/login');
     },
   },
