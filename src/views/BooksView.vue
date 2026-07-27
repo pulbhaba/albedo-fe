@@ -25,10 +25,11 @@
         <button
           v-else
           type="button"
-          class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+          :disabled="roleRequestSubmitting || Boolean(pendingRoleRequest)"
           @click="requestEditorRole"
         >
-          Request editor role
+          {{ editorRequestButtonLabel }}
         </button>
       </div>
     </section>
@@ -38,6 +39,14 @@
       class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
     >
       {{ activeNotice }}
+    </div>
+
+    <div
+      v-if="roleRequestMessage"
+      class="rounded-lg border px-4 py-3 text-sm font-medium"
+      :class="roleRequestMessageClass"
+    >
+      {{ roleRequestMessage }}
     </div>
 
     <section class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
@@ -137,6 +146,12 @@
 
 <script>
 import { mapState } from 'pinia';
+import {
+  createEditorRoleRequest,
+  getApiErrorMessage,
+  listMyRoleRequests,
+  ROLE_REQUEST_STATUS,
+} from '@/api/roleRequests';
 import { useAuthStore } from '@/store/auth';
 
 export default {
@@ -145,6 +160,10 @@ export default {
     return {
       selectedBookId: 1,
       activeNotice: '',
+      roleRequests: [],
+      roleRequestsLoading: false,
+      roleRequestSubmitting: false,
+      roleRequestError: '',
       books: [
         {
           id: 1,
@@ -209,8 +228,74 @@ export default {
     selectedBook() {
       return this.books.find((book) => book.id === this.selectedBookId) || this.books[0];
     },
+    pendingRoleRequest() {
+      return this.roleRequests.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING);
+    },
+    latestRoleRequest() {
+      return this.roleRequests[0] || null;
+    },
+    editorRequestButtonLabel() {
+      if (this.roleRequestSubmitting) {
+        return 'Sending request';
+      }
+
+      if (this.pendingRoleRequest) {
+        return 'Request pending';
+      }
+
+      return 'Request editor role';
+    },
+    roleRequestMessage() {
+      if (this.canPublishBooks) {
+        return '';
+      }
+
+      if (this.roleRequestsLoading) {
+        return 'Checking editor role request status.';
+      }
+
+      if (this.roleRequestError) {
+        return this.roleRequestError;
+      }
+
+      if (this.pendingRoleRequest) {
+        return 'Your editor role request is waiting for admin approval.';
+      }
+
+      if (this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
+        return 'Your latest editor role request was rejected. You can submit a new request.';
+      }
+
+      return '';
+    },
+    roleRequestMessageClass() {
+      if (this.roleRequestError || this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
+        return 'border-rose-200 bg-rose-50 text-rose-900';
+      }
+
+      return 'border-amber-200 bg-amber-50 text-amber-900';
+    },
+  },
+  mounted() {
+    this.loadRoleRequests();
   },
   methods: {
+    async loadRoleRequests() {
+      if (this.canPublishBooks) {
+        return;
+      }
+
+      this.roleRequestsLoading = true;
+      this.roleRequestError = '';
+
+      try {
+        this.roleRequests = await listMyRoleRequests();
+      } catch (error) {
+        this.roleRequestError = getApiErrorMessage(error, 'Could not load editor role request status.');
+      } finally {
+        this.roleRequestsLoading = false;
+      }
+    },
     continueReading() {
       this.activeNotice = `Opened ${this.selectedBook.title}.`;
     },
@@ -223,8 +308,26 @@ export default {
     publishSelectedDraft() {
       this.activeNotice = 'Draft submitted for publishing.';
     },
-    requestEditorRole() {
-      this.activeNotice = 'Editor role request drafted for admin approval.';
+    async requestEditorRole() {
+      if (this.pendingRoleRequest || this.roleRequestSubmitting) {
+        return;
+      }
+
+      this.roleRequestSubmitting = true;
+      this.roleRequestError = '';
+      this.activeNotice = '';
+
+      try {
+        const request = await createEditorRoleRequest(
+          'Requested publishing access from the books workspace.'
+        );
+        this.roleRequests = [request, ...this.roleRequests];
+        this.activeNotice = 'Editor role request sent for admin approval.';
+      } catch (error) {
+        this.roleRequestError = getApiErrorMessage(error, 'Could not request editor role.');
+      } finally {
+        this.roleRequestSubmitting = false;
+      }
     },
   },
 };

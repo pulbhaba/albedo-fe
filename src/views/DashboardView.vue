@@ -31,7 +31,7 @@
       >
         <p class="text-sm font-medium text-slate-500">Admin</p>
         <h2 class="mt-2 text-xl font-semibold text-slate-950">Promotion approvals</h2>
-        <p class="mt-3 text-sm leading-6 text-slate-600">2 pending requests</p>
+        <p class="mt-3 text-sm leading-6 text-slate-600">{{ promotionSummary }}</p>
       </router-link>
     </section>
   </div>
@@ -39,11 +39,56 @@
 
 <script>
 import { mapState } from 'pinia';
+import {
+  getApiErrorMessage,
+  listPromotionRequests,
+  ROLE_REQUEST_STATUS,
+} from '@/api/roleRequests';
 import { useAuthStore } from '@/store/auth';
 
 export default {
+  data() {
+    return {
+      pendingPromotionCount: null,
+      promotionSummaryError: '',
+    };
+  },
   computed: {
     ...mapState(useAuthStore, ['canApprovePromotions']),
+    promotionSummary() {
+      if (this.promotionSummaryError) {
+        return this.promotionSummaryError;
+      }
+
+      if (this.pendingPromotionCount === null) {
+        return 'Checking pending requests';
+      }
+
+      if (this.pendingPromotionCount === 1) {
+        return '1 pending request';
+      }
+
+      return `${this.pendingPromotionCount} pending requests`;
+    },
+  },
+  mounted() {
+    this.loadPendingPromotionCount();
+  },
+  methods: {
+    async loadPendingPromotionCount() {
+      if (!this.canApprovePromotions) {
+        return;
+      }
+
+      this.promotionSummaryError = '';
+
+      try {
+        const requests = await listPromotionRequests(ROLE_REQUEST_STATUS.PENDING);
+        this.pendingPromotionCount = requests.length;
+      } catch (error) {
+        this.promotionSummaryError = getApiErrorMessage(error, 'Could not load requests');
+      }
+    },
   },
 };
 </script>
