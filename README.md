@@ -5,6 +5,13 @@
 npm install
 ```
 
+## Contributing
+
+Changes follow an issue-to-pull-request workflow. Create or claim a GitHub issue,
+branch from `dev`, validate the change, and open a pull request back to `dev`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the branch naming, commit, and pull
+request requirements.
+
 ## Local backend configuration
 
 By default, local development uses the Vue dev-server proxy. Frontend code calls
