@@ -2,14 +2,14 @@
   <div class="space-y-6">
     <section class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
       <div>
-        <p class="text-sm font-medium uppercase tracking-wide text-emerald-700">Library</p>
-        <h1 class="mt-2 text-3xl font-semibold tracking-normal text-slate-950">Books</h1>
+        <p class="text-sm font-medium uppercase tracking-wide text-blue-2">Library</p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-normal text-gray-1">Books</h1>
       </div>
 
       <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+          class="rounded-md border border-black-4 bg-black-2 px-4 py-2 text-sm font-medium text-gray-1 hover:bg-black-3"
           @click="startDraft"
         >
           New manuscript
@@ -17,7 +17,7 @@
         <button
           v-if="canPublishBooks"
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800"
+          class="rounded-md bg-blue-2 px-4 py-2 text-sm font-medium text-white hover:bg-blue-1"
           @click="publishSelectedDraft"
         >
           Publish draft
@@ -25,7 +25,7 @@
         <button
           v-else
           type="button"
-          class="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:bg-amber-300"
+          class="rounded-md bg-blue-2 px-4 py-2 text-sm font-medium text-white hover:bg-blue-1 disabled:cursor-not-allowed disabled:bg-blue-2/50"
           :disabled="roleRequestSubmitting || Boolean(pendingRoleRequest)"
           @click="requestEditorRole"
         >
@@ -36,7 +36,7 @@
 
     <div
       v-if="activeNotice"
-      class="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900"
+      class="rounded-lg border border-blue-2/30 bg-blue-2/10 px-4 py-3 text-sm font-medium text-blue-2"
     >
       {{ activeNotice }}
     </div>
@@ -54,8 +54,8 @@
         <article
           v-for="book in books"
           :key="book.id"
-          class="grid cursor-pointer grid-cols-[72px_minmax(0,1fr)] gap-4 rounded-lg border bg-white p-3 shadow-sm transition hover:border-emerald-300"
-          :class="selectedBookId === book.id ? 'border-emerald-400 ring-1 ring-emerald-200' : 'border-slate-200'"
+          class="grid cursor-pointer grid-cols-[72px_minmax(0,1fr)] gap-4 rounded-lg border bg-black-2 p-3 shadow-sm transition hover:border-blue-2"
+          :class="selectedBookId === book.id ? 'border-blue-2 ring-1 ring-blue-2/40' : 'border-black-4'"
           @click="selectedBookId = book.id"
         >
           <div
@@ -67,38 +67,38 @@
           <div class="min-w-0">
             <div class="flex items-start justify-between gap-3">
               <div>
-                <h2 class="truncate text-base font-semibold text-slate-950">{{ book.title }}</h2>
-                <p class="mt-1 text-sm text-slate-500">{{ book.author }}</p>
+                <h2 class="truncate text-base font-semibold text-gray-1">{{ book.title }}</h2>
+                <p class="mt-1 text-sm text-gray-2">{{ book.author }}</p>
               </div>
-              <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+              <span class="rounded-full bg-black-3 px-2 py-1 text-xs font-medium text-gray-2">
                 {{ book.status }}
               </span>
             </div>
-            <p class="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{{ book.summary }}</p>
-            <div class="mt-4 h-2 rounded-full bg-slate-100">
-              <div class="h-2 rounded-full bg-emerald-600" :style="{ width: `${book.progress}%` }"></div>
+            <p class="mt-3 line-clamp-2 text-sm leading-6 text-gray-2">{{ book.summary }}</p>
+            <div class="mt-4 h-2 rounded-full bg-black-3">
+              <div class="h-2 rounded-full bg-blue-2" :style="{ width: `${book.progress}%` }"></div>
             </div>
           </div>
         </article>
       </div>
 
-      <article class="rounded-lg border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-200 px-5 py-4">
-          <p class="text-sm font-medium text-slate-500">{{ selectedBook.genre }}</p>
-          <h2 class="mt-1 text-2xl font-semibold tracking-normal text-slate-950">{{ selectedBook.title }}</h2>
-          <p class="mt-1 text-sm text-slate-500">{{ selectedBook.author }}</p>
+      <article class="rounded-lg border border-black-4 bg-black-2 shadow-sm">
+        <div class="border-b border-black-4 px-5 py-4">
+          <p class="text-sm font-medium text-gray-2">{{ selectedBook.genre }}</p>
+          <h2 class="mt-1 text-2xl font-semibold tracking-normal text-gray-1">{{ selectedBook.title }}</h2>
+          <p class="mt-1 text-sm text-gray-2">{{ selectedBook.author }}</p>
         </div>
 
         <div class="space-y-5 px-5 py-5">
-          <div class="rounded-md bg-stone-100 p-5">
-            <p class="text-base leading-8 text-slate-800">{{ selectedBook.excerpt }}</p>
+          <div class="rounded-md bg-black-3 p-5">
+            <p class="text-base leading-8 text-gray-1">{{ selectedBook.excerpt }}</p>
           </div>
 
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm font-medium text-slate-500">{{ selectedBook.progress }}% read</p>
+            <p class="text-sm font-medium text-gray-2">{{ selectedBook.progress }}% read</p>
             <button
               type="button"
-              class="rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+              class="rounded-md bg-blue-2 px-4 py-2 text-sm font-medium text-white hover:bg-blue-1"
               @click="continueReading"
             >
               Continue reading
@@ -108,31 +108,31 @@
       </article>
     </section>
 
-    <section class="rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div class="border-b border-slate-200 px-5 py-4">
-        <h2 class="text-xl font-semibold tracking-normal text-slate-950">Manuscripts</h2>
+    <section class="rounded-lg border border-black-4 bg-black-2 shadow-sm">
+      <div class="border-b border-black-4 px-5 py-4">
+        <h2 class="text-xl font-semibold tracking-normal text-gray-1">Manuscripts</h2>
       </div>
 
-      <div class="divide-y divide-slate-200">
+      <div class="divide-y divide-black-4">
         <article
           v-for="draft in drafts"
           :key="draft.id"
           class="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between"
         >
           <div>
-            <h3 class="font-semibold text-slate-950">{{ draft.title }}</h3>
-            <p class="mt-1 text-sm text-slate-500">
+            <h3 class="font-semibold text-gray-1">{{ draft.title }}</h3>
+            <p class="mt-1 text-sm text-gray-2">
               {{ draft.words.toLocaleString() }} words &middot; {{ draft.updated }}
             </p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            <span class="rounded-full bg-black-3 px-3 py-1 text-xs font-medium text-gray-2">
               {{ draft.status }}
             </span>
             <button
               type="button"
-              class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              class="rounded-md border border-black-4 px-3 py-2 text-sm font-medium text-gray-1 hover:bg-black-3"
               @click="editDraft(draft)"
             >
               Write
@@ -270,10 +270,10 @@ export default {
     },
     roleRequestMessageClass() {
       if (this.roleRequestError || this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'border-rose-200 bg-rose-50 text-rose-900';
+        return 'border-red-1/30 bg-red-1/10 text-red-1';
       }
 
-      return 'border-amber-200 bg-amber-50 text-amber-900';
+      return 'border-blue-2/30 bg-blue-2/10 text-blue-2';
     },
   },
   mounted() {

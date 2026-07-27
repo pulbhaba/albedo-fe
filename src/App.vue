@@ -1,41 +1,41 @@
 <template>
   <router-view v-if="!isAuthenticated" />
-  <div v-else class="min-h-screen bg-stone-50 text-slate-950">
-    <header class="border-b border-slate-200 bg-white">
+  <div v-else class="min-h-screen bg-black-1 text-gray-1">
+    <header class="border-b border-black-4 bg-black-2">
       <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <router-link to="/books" class="text-xl font-semibold tracking-normal text-slate-950">
+          <router-link to="/books" class="text-xl font-semibold tracking-normal text-gray-1">
             Siththara
           </router-link>
-          <p class="text-sm text-slate-500">{{ username }}</p>
+          <p class="text-sm text-gray-2">{{ username }}</p>
         </div>
 
         <nav class="flex flex-wrap items-center gap-2">
           <router-link
             to="/books"
-            class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-            active-class="bg-emerald-50 text-emerald-800"
+            class="rounded-md px-3 py-2 text-sm font-medium text-gray-2 hover:bg-black-3 hover:text-gray-1"
+            active-class="bg-blue-2/10 text-blue-2"
           >
             Books
           </router-link>
           <router-link
             to="/dashboard"
-            class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-            active-class="bg-emerald-50 text-emerald-800"
+            class="rounded-md px-3 py-2 text-sm font-medium text-gray-2 hover:bg-black-3 hover:text-gray-1"
+            active-class="bg-blue-2/10 text-blue-2"
           >
             Dashboard
           </router-link>
           <router-link
             v-if="canApprovePromotions"
             to="/promotions"
-            class="rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-            active-class="bg-emerald-50 text-emerald-800"
+            class="rounded-md px-3 py-2 text-sm font-medium text-gray-2 hover:bg-black-3 hover:text-gray-1"
+            active-class="bg-blue-2/10 text-blue-2"
           >
             Promotions
           </router-link>
           <button
             type="button"
-            class="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+            class="rounded-md border border-black-4 px-3 py-2 text-sm font-medium text-gray-1 hover:bg-black-3"
             @click="handleLogout"
           >
             Logout
