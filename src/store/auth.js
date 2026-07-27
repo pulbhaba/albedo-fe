@@ -8,6 +8,61 @@ const TOKEN_ENDPOINT = `${API_URL}/oauth2/token`;
 const REVOKE_ENDPOINT = `${API_URL}/oauth2/revoke`;
 const LOGOUT_ENDPOINT = `${API_URL}/user/logout`;
 const TOKEN_STORAGE_KEY = 'albedo.auth.tokens';
+const PUBLISHING_ROLES = ['ROLE_EDITOR', 'ROLE_ADMIN'];
+
+function decodeBase64Url(value) {
+    if (typeof window === 'undefined') {
+        return '';
+    }
+
+    const base64 = value.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+    const decoded = window.atob(padded);
+
+    return decodeURIComponent(
+        decoded
+            .split('')
+            .map((character) => `%${`00${character.charCodeAt(0).toString(16)}`.slice(-2)}`)
+            .join('')
+    );
+}
+
+function decodeAccessToken(accessToken) {
+    if (!accessToken) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(decodeBase64Url(accessToken.split('.')[1]));
+    } catch {
+        return {};
+    }
+}
+
+function normalizeRoles(rawRoles) {
+    if (Array.isArray(rawRoles)) {
+        return rawRoles.filter(Boolean);
+    }
+
+    if (typeof rawRoles === 'string') {
+        return rawRoles
+            .split(/[,\s]+/)
+            .map((role) => role.trim())
+            .filter((role) => role.startsWith('ROLE_'));
+    }
+
+    return [];
+}
+
+function buildSession(accessToken) {
+    const payload = decodeAccessToken(accessToken);
+    const username = payload.sub || null;
+
+    return {
+        user: username ? { username } : null,
+        roles: normalizeRoles(payload.roles || payload.authorities),
+    };
+}
 
 function getStoredTokens() {
     if (typeof window === 'undefined') {
@@ -93,6 +148,7 @@ function requestTokenRevocation(token, tokenTypeHint) {
 export const useAuthStore = defineStore('auth', {
     state: () => {
         const storedTokens = getStoredTokens();
+        const session = buildSession(storedTokens?.accessToken);
 
         if (storedTokens?.accessToken) {
             applyAuthHeader(storedTokens.accessToken);
@@ -102,13 +158,25 @@ export const useAuthStore = defineStore('auth', {
             accessToken: storedTokens?.accessToken || null,
             refreshTokenValue: storedTokens?.refreshToken || null,
             isAuthenticated: Boolean(storedTokens?.accessToken),
+            user: session.user,
+            roles: session.roles,
         };
+    },
+    getters: {
+        username: (state) => state.user?.username || null,
+        hasRole: (state) => (role) => state.roles.includes(role),
+        canApprovePromotions: (state) => state.roles.includes('ROLE_ADMIN'),
+        canPublishBooks: (state) => state.roles.some((role) => PUBLISHING_ROLES.includes(role)),
     },
     actions: {
         setTokens(tokens) {
+            const session = buildSession(tokens.access_token);
+
             this.accessToken = tokens.access_token;
             this.refreshTokenValue = tokens.refresh_token || this.refreshTokenValue;
             this.isAuthenticated = true;
+            this.user = session.user;
+            this.roles = session.roles;
             applyAuthHeader(tokens.access_token);
             storeTokens({
                 accessToken: this.accessToken,
@@ -119,6 +187,8 @@ export const useAuthStore = defineStore('auth', {
             this.accessToken = null;
             this.refreshTokenValue = null;
             this.isAuthenticated = false;
+            this.user = null;
+            this.roles = [];
             applyAuthHeader(null);
             removeStoredTokens();
         },
