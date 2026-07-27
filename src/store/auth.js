@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { defineStore } from 'pinia';
+import axios from 'axios'
+import { defineStore } from 'pinia'
 
 const API_URL = (process.env.VUE_APP_API_URL || '').replace(/\/$/, '');
 const CLIENT_ID = process.env.VUE_APP_CLIENT_ID || 'albedo-client';
@@ -146,134 +146,134 @@ function requestTokenRevocation(token, tokenTypeHint) {
 }
 
 export const useAuthStore = defineStore('auth', {
-    state: () => {
-        const storedTokens = getStoredTokens();
-        const session = buildSession(storedTokens?.accessToken);
+  state: () => {
+    const storedTokens = getStoredTokens()
+    const session = buildSession(storedTokens?.accessToken)
 
-        if (storedTokens?.accessToken) {
-            applyAuthHeader(storedTokens.accessToken);
-        }
-
-        return {
-            accessToken: storedTokens?.accessToken || null,
-            refreshTokenValue: storedTokens?.refreshToken || null,
-            isAuthenticated: Boolean(storedTokens?.accessToken),
-            user: session.user,
-            roles: session.roles,
-        };
-    },
-    getters: {
-        username: (state) => state.user?.username || null,
-        hasRole: (state) => (role) => state.roles.includes(role),
-        canApprovePromotions: (state) => state.roles.includes('ROLE_ADMIN'),
-        canPublishBooks: (state) => state.roles.some((role) => PUBLISHING_ROLES.includes(role)),
-    },
-    actions: {
-        setTokens(tokens) {
-            const session = buildSession(tokens.access_token);
-
-            this.accessToken = tokens.access_token;
-            this.refreshTokenValue = tokens.refresh_token || this.refreshTokenValue;
-            this.isAuthenticated = true;
-            this.user = session.user;
-            this.roles = session.roles;
-            applyAuthHeader(tokens.access_token);
-            storeTokens({
-                accessToken: this.accessToken,
-                refreshToken: this.refreshTokenValue,
-            });
-        },
-        clearSession() {
-            this.accessToken = null;
-            this.refreshTokenValue = null;
-            this.isAuthenticated = false;
-            this.user = null;
-            this.roles = [];
-            applyAuthHeader(null);
-            removeStoredTokens();
-        },
-        async login(credentials) {
-            const response = await requestToken({
-                grant_type: 'password',
-                username: credentials.username,
-                password: credentials.password,
-            });
-
-            this.setTokens(response.data);
-        },
-        async refreshToken() {
-            if (!this.refreshTokenValue) {
-                throw new Error('No refresh token available');
-            }
-
-            const response = await requestToken({
-                grant_type: 'refresh_token',
-                refresh_token: this.refreshTokenValue,
-            });
-
-            this.setTokens(response.data);
-        },
-        async logout() {
-            const accessToken = this.accessToken;
-            const refreshToken = this.refreshTokenValue;
-            const logoutRequests = [];
-
-            if (accessToken) {
-                logoutRequests.push(requestLogout(refreshToken));
-            }
-
-            if (refreshToken) {
-                logoutRequests.push(requestTokenRevocation(refreshToken, 'refresh_token'));
-            }
-
-            try {
-                await Promise.allSettled(logoutRequests);
-            } finally {
-                this.clearSession();
-            }
-        },
-    },
-});
-
-let interceptorsRegistered = false;
-
-export function setupAuthInterceptors(pinia) {
-    if (interceptorsRegistered) {
-        return;
+    if (storedTokens?.accessToken) {
+      applyAuthHeader(storedTokens.accessToken)
     }
 
-    interceptorsRegistered = true;
+    return {
+      accessToken: storedTokens?.accessToken || null,
+      refreshTokenValue: storedTokens?.refreshToken || null,
+      isAuthenticated: Boolean(storedTokens?.accessToken),
+      user: session.user,
+      roles: session.roles
+    }
+  },
+  getters: {
+    username: (state) => state.user?.username || null,
+    hasRole: (state) => (role) => state.roles.includes(role),
+    canApprovePromotions: (state) => state.roles.includes('ROLE_ADMIN'),
+    canPublishBooks: (state) => state.roles.some((role) => PUBLISHING_ROLES.includes(role))
+  },
+  actions: {
+    setTokens (tokens) {
+      const session = buildSession(tokens.access_token)
 
-    axios.interceptors.response.use(
-        (response) => response,
-        async (error) => {
-            const originalRequest = error?.config;
-            const requestUrl = originalRequest?.url ?? '';
+      this.accessToken = tokens.access_token
+      this.refreshTokenValue = tokens.refresh_token || this.refreshTokenValue
+      this.isAuthenticated = true
+      this.user = session.user
+      this.roles = session.roles
+      applyAuthHeader(tokens.access_token)
+      storeTokens({
+        accessToken: this.accessToken,
+        refreshToken: this.refreshTokenValue
+      })
+    },
+    clearSession () {
+      this.accessToken = null
+      this.refreshTokenValue = null
+      this.isAuthenticated = false
+      this.user = null
+      this.roles = []
+      applyAuthHeader(null)
+      removeStoredTokens()
+    },
+    async login (credentials) {
+      const response = await requestToken({
+        grant_type: 'password',
+        username: credentials.username,
+        password: credentials.password
+      })
 
-            if (
-                error?.response?.status === 401 &&
+      this.setTokens(response.data)
+    },
+    async refreshToken () {
+      if (!this.refreshTokenValue) {
+        throw new Error('No refresh token available')
+      }
+
+      const response = await requestToken({
+        grant_type: 'refresh_token',
+        refresh_token: this.refreshTokenValue
+      })
+
+      this.setTokens(response.data)
+    },
+    async logout () {
+      const accessToken = this.accessToken
+      const refreshToken = this.refreshTokenValue
+      const logoutRequests = []
+
+      if (accessToken) {
+        logoutRequests.push(requestLogout(refreshToken))
+      }
+
+      if (refreshToken) {
+        logoutRequests.push(requestTokenRevocation(refreshToken, 'refresh_token'))
+      }
+
+      try {
+        await Promise.allSettled(logoutRequests)
+      } finally {
+        this.clearSession()
+      }
+    }
+  }
+})
+
+let interceptorsRegistered = false
+
+export function setupAuthInterceptors (pinia) {
+  if (interceptorsRegistered) {
+    return
+  }
+
+  interceptorsRegistered = true
+
+  axios.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      const originalRequest = error?.config
+      const requestUrl = originalRequest?.url ?? ''
+
+      if (
+        error?.response?.status === 401 &&
                 originalRequest &&
                 !requestUrl.includes('/oauth2/token') &&
                 !requestUrl.includes('/oauth2/revoke') &&
                 !requestUrl.includes('/user/logout') &&
                 !originalRequest._retry
-            ) {
-                originalRequest._retry = true;
+      ) {
+        originalRequest._retry = true
 
-                const authStore = useAuthStore(pinia);
+        const authStore = useAuthStore(pinia)
 
-                try {
-                    await authStore.refreshToken();
-                    originalRequest.headers = originalRequest.headers || {};
-                    originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`;
-                    return axios(originalRequest);
-                } catch (refreshError) {
-                    await authStore.logout();
-                    return Promise.reject(refreshError);
-                }
-            }
-
-            return Promise.reject(error);
+        try {
+          await authStore.refreshToken()
+          originalRequest.headers = originalRequest.headers || {}
+          originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
+          return axios(originalRequest)
+        } catch (refreshError) {
+          await authStore.logout()
+          return Promise.reject(refreshError)
         }
-    );
+      }
+
+      return Promise.reject(error)
+    }
+  )
 }

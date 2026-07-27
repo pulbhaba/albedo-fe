@@ -38,13 +38,13 @@
 </template>
 
 <script>
-import { mapState } from 'pinia';
+import { mapState } from 'pinia'
 import {
   getApiErrorMessage,
   listPromotionRequests,
-  ROLE_REQUEST_STATUS,
-} from '@/api/roleRequests';
-import { useAuthStore } from '@/store/auth';
+  ROLE_REQUEST_STATUS
+} from '@/api/roleRequests'
+import { useAuthStore } from '@/store/auth'
 
 export default {
   data() {
@@ -75,20 +75,20 @@ export default {
     this.loadPendingPromotionCount();
   },
   methods: {
-    async loadPendingPromotionCount() {
+    async loadPendingPromotionCount () {
       if (!this.canApprovePromotions) {
-        return;
+        return
       }
 
-      this.promotionSummaryError = '';
+      this.promotionSummaryError = ''
 
       try {
-        const requests = await listPromotionRequests(ROLE_REQUEST_STATUS.PENDING);
-        this.pendingPromotionCount = requests.length;
+        const requests = await listPromotionRequests(ROLE_REQUEST_STATUS.PENDING)
+        this.pendingPromotionCount = requests.length
       } catch (error) {
-        this.promotionSummaryError = getApiErrorMessage(error, 'Could not load requests');
+        this.promotionSummaryError = getApiErrorMessage(error, 'Could not load requests')
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

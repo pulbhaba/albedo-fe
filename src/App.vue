@@ -57,14 +57,14 @@ import { useAuthStore } from '@/store/auth';
 export default {
   name: 'App',
   computed: {
-    ...mapState(useAuthStore, ['isAuthenticated', 'username', 'canApprovePromotions']),
+    ...mapState(useAuthStore, ['isAuthenticated', 'username', 'canApprovePromotions'])
   },
   methods: {
     ...mapActions(useAuthStore, ['logout']),
-    async handleLogout() {
-      await this.logout();
-      this.$router.push('/login');
-    },
-  },
-};
+    async handleLogout () {
+      await this.logout()
+      this.$router.push('/login')
+    }
+  }
+}
 </script>
