@@ -263,11 +263,16 @@ export function setupAuthInterceptors (pinia) {
         const authStore = useAuthStore(pinia)
 
         try {
+          // Explicitly wait for token refresh before retrying
           await authStore.refreshToken()
+          
+          // Re-apply the new access token to the original request headers
           originalRequest.headers = originalRequest.headers || {}
           originalRequest.headers.Authorization = `Bearer ${authStore.accessToken}`
+          
           return axios(originalRequest)
         } catch (refreshError) {
+          // If refresh fails, clear session and redirect to login (handled by store logout)
           await authStore.logout()
           return Promise.reject(refreshError)
         }
