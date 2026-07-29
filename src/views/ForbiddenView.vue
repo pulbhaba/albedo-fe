@@ -13,6 +13,6 @@
 
 <script>
 export default {
-  name: 'ForbiddenView',
-};
+  name: 'ForbiddenView'
+}
 </script>

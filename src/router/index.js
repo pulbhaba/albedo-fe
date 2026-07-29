@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import BooksView from '@/views/BooksView.vue'
+import NovelReaderView from '@/views/NovelReaderView.vue'
 import PromotionApprovalsView from '@/views/PromotionApprovalsView.vue'
 import ForbiddenView from '@/views/ForbiddenView.vue'
 import pinia from '@/store'
@@ -11,6 +12,7 @@ const routes = [
   { path: '/', redirect: '/books' },
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/books', name: 'Books', component: BooksView, meta: { requiresAuth: true } },
+  { path: '/books/:novelId', name: 'NovelReader', component: NovelReaderView, meta: { requiresAuth: true } },
   { path: '/dashboard', name: 'Dashboard', component: DashboardView, meta: { requiresAuth: true } },
   {
     path: '/promotions',
