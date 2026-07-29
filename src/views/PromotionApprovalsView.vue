@@ -92,99 +92,99 @@ import {
   getApiErrorMessage,
   listPromotionRequests,
   rejectPromotionRequest,
-  ROLE_REQUEST_STATUS,
-} from '@/api/roleRequests';
+  ROLE_REQUEST_STATUS
+} from '@/api/roleRequests'
 
 export default {
   name: 'PromotionApprovalsView',
-  data() {
+  data () {
     return {
       requests: [],
       isLoading: false,
       errorMessage: '',
-      resolvingRequestId: null,
-    };
+      resolvingRequestId: null
+    }
   },
   computed: {
-    pendingRequests() {
-      return this.requests.filter((request) => request.status === ROLE_REQUEST_STATUS.PENDING);
-    },
+    pendingRequests () {
+      return this.requests.filter((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
+    }
   },
-  mounted() {
-    this.loadRequests();
+  mounted () {
+    this.loadRequests()
   },
   methods: {
-    async loadRequests() {
-      this.isLoading = true;
-      this.errorMessage = '';
+    async loadRequests () {
+      this.isLoading = true
+      this.errorMessage = ''
 
       try {
-        this.requests = await listPromotionRequests();
+        this.requests = await listPromotionRequests()
       } catch (error) {
-        this.errorMessage = getApiErrorMessage(error, 'Could not load promotion requests.');
+        this.errorMessage = getApiErrorMessage(error, 'Could not load promotion requests.')
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
-    async approveRequest(request) {
-      await this.resolveRequest(request, approvePromotionRequest, 'Approved from promotion queue.');
+    async approveRequest (request) {
+      await this.resolveRequest(request, approvePromotionRequest, 'Approved from promotion queue.')
     },
-    async rejectRequest(request) {
-      await this.resolveRequest(request, rejectPromotionRequest, 'Rejected from promotion queue.');
+    async rejectRequest (request) {
+      await this.resolveRequest(request, rejectPromotionRequest, 'Rejected from promotion queue.')
     },
-    async resolveRequest(request, action, reason) {
+    async resolveRequest (request, action, reason) {
       if (this.resolvingRequestId) {
-        return;
+        return
       }
 
-      this.resolvingRequestId = request.id;
-      this.errorMessage = '';
+      this.resolvingRequestId = request.id
+      this.errorMessage = ''
 
       try {
-        const updatedRequest = await action(request.id, reason);
-        this.replaceRequest(updatedRequest);
+        const updatedRequest = await action(request.id, reason)
+        this.replaceRequest(updatedRequest)
       } catch (error) {
-        this.errorMessage = getApiErrorMessage(error, 'Could not resolve promotion request.');
+        this.errorMessage = getApiErrorMessage(error, 'Could not resolve promotion request.')
       } finally {
-        this.resolvingRequestId = null;
+        this.resolvingRequestId = null
       }
     },
-    replaceRequest(updatedRequest) {
+    replaceRequest (updatedRequest) {
       this.requests = this.requests.map((request) =>
         request.id === updatedRequest.id ? updatedRequest : request
-      );
+      )
     },
-    displayName(request) {
-      return [request.firstName, request.lastName].filter(Boolean).join(' ') || request.username;
+    displayName (request) {
+      return [request.firstName, request.lastName].filter(Boolean).join(' ') || request.username
     },
-    statusLabel(status) {
+    statusLabel (status) {
       if (!status) {
-        return '';
+        return ''
       }
 
-      return status.charAt(0) + status.slice(1).toLowerCase();
+      return status.charAt(0) + status.slice(1).toLowerCase()
     },
-    resolvedLabel(request) {
+    resolvedLabel (request) {
       if (!request.resolvedAt) {
-        return '';
+        return ''
       }
 
       return new Intl.DateTimeFormat(undefined, {
         dateStyle: 'medium',
-        timeStyle: 'short',
-      }).format(new Date(request.resolvedAt));
+        timeStyle: 'short'
+      }).format(new Date(request.resolvedAt))
     },
-    statusClass(status) {
+    statusClass (status) {
       if (status === ROLE_REQUEST_STATUS.APPROVED) {
-        return 'bg-blue-2/10 text-blue-2';
+        return 'bg-blue-2/10 text-blue-2'
       }
 
       if (status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'bg-red-1/10 text-red-1';
+        return 'bg-red-1/10 text-red-1'
       }
 
-      return 'bg-black-3 text-gray-2';
-    },
-  },
-};
+      return 'bg-black-3 text-gray-2'
+    }
+  }
+}
 </script>

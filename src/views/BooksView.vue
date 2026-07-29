@@ -145,18 +145,18 @@
 </template>
 
 <script>
-import { mapState } from 'pinia';
+import { mapState } from 'pinia'
 import {
   createEditorRoleRequest,
   getApiErrorMessage,
   listMyRoleRequests,
-  ROLE_REQUEST_STATUS,
-} from '@/api/roleRequests';
-import { useAuthStore } from '@/store/auth';
+  ROLE_REQUEST_STATUS
+} from '@/api/roleRequests'
+import { useAuthStore } from '@/store/auth'
 
 export default {
   name: 'BooksView',
-  data() {
+  data () {
     return {
       selectedBookId: 1,
       activeNotice: '',
@@ -176,7 +176,7 @@ export default {
           coverClass: 'from-emerald-800 to-teal-500',
           summary: 'A city archivist finds a sealed room where unfinished lives are catalogued by lamplight.',
           excerpt:
-            'The archive woke before the city did. Lamps clicked on in their brass cages, one by one, until the hall became a river of warm light and paper dust. Nila pressed her palm to the oldest drawer and felt it answer with a pulse.',
+            'The archive woke before the city did. Lamps clicked on in their brass cages, one by one, until the hall became a river of warm light and paper dust. Nila pressed her palm to the oldest drawer and felt it answer with a pulse.'
         },
         {
           id: 2,
@@ -189,7 +189,7 @@ export default {
           coverClass: 'from-sky-700 to-cyan-500',
           summary: 'Two cartographers cross a windless ocean that refuses to stay mapped.',
           excerpt:
-            'By noon the compass had chosen east, then north, then the precise direction of a memory Mara had never told anyone. The sea around them stayed flat as polished glass, reflecting a sky without clouds or mercy.',
+            'By noon the compass had chosen east, then north, then the precise direction of a memory Mara had never told anyone. The sea around them stayed flat as polished glass, reflecting a sky without clouds or mercy.'
         },
         {
           id: 3,
@@ -202,8 +202,8 @@ export default {
           coverClass: 'from-amber-700 to-rose-500',
           summary: 'A family returns to an abandoned orchard and negotiates what should be preserved.',
           excerpt:
-            'Rainwater gathered in the cracked steps like small mirrors. Every branch in the orchard held a bead of light, and for the first time in twenty years, Kavish could name the place without lowering his voice.',
-        },
+            'Rainwater gathered in the cracked steps like small mirrors. Every branch in the orchard held a bead of light, and for the first time in twenty years, Kavish could name the place without lowering his voice.'
+        }
       ],
       drafts: [
         {
@@ -211,124 +211,124 @@ export default {
           title: 'Untitled rainfall chapter',
           status: 'Draft',
           words: 4280,
-          updated: 'Updated today',
+          updated: 'Updated today'
         },
         {
           id: 'draft-2',
           title: 'Chapter 4: The Glass Road',
           status: 'Ready for review',
           words: 12140,
-          updated: 'Updated yesterday',
-        },
-      ],
-    };
+          updated: 'Updated yesterday'
+        }
+      ]
+    }
   },
   computed: {
     ...mapState(useAuthStore, ['canPublishBooks']),
-    selectedBook() {
-      return this.books.find((book) => book.id === this.selectedBookId) || this.books[0];
+    selectedBook () {
+      return this.books.find((book) => book.id === this.selectedBookId) || this.books[0]
     },
-    pendingRoleRequest() {
-      return this.roleRequests.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING);
+    pendingRoleRequest () {
+      return this.roleRequests.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
     },
-    latestRoleRequest() {
-      return this.roleRequests[0] || null;
+    latestRoleRequest () {
+      return this.roleRequests[0] || null
     },
-    editorRequestButtonLabel() {
+    editorRequestButtonLabel () {
       if (this.roleRequestSubmitting) {
-        return 'Sending request';
+        return 'Sending request'
       }
 
       if (this.pendingRoleRequest) {
-        return 'Request pending';
+        return 'Request pending'
       }
 
-      return 'Request editor role';
+      return 'Request editor role'
     },
-    roleRequestMessage() {
+    roleRequestMessage () {
       if (this.canPublishBooks) {
-        return '';
+        return ''
       }
 
       if (this.roleRequestsLoading) {
-        return 'Checking editor role request status.';
+        return 'Checking editor role request status.'
       }
 
       if (this.roleRequestError) {
-        return this.roleRequestError;
+        return this.roleRequestError
       }
 
       if (this.pendingRoleRequest) {
-        return 'Your editor role request is waiting for admin approval.';
+        return 'Your editor role request is waiting for admin approval.'
       }
 
       if (this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'Your latest editor role request was rejected. You can submit a new request.';
+        return 'Your latest editor role request was rejected. You can submit a new request.'
       }
 
-      return '';
+      return ''
     },
-    roleRequestMessageClass() {
+    roleRequestMessageClass () {
       if (this.roleRequestError || this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'border-red-1/30 bg-red-1/10 text-red-1';
+        return 'border-red-1/30 bg-red-1/10 text-red-1'
       }
 
-      return 'border-blue-2/30 bg-blue-2/10 text-blue-2';
-    },
+      return 'border-blue-2/30 bg-blue-2/10 text-blue-2'
+    }
   },
-  mounted() {
-    this.loadRoleRequests();
+  mounted () {
+    this.loadRoleRequests()
   },
   methods: {
-    async loadRoleRequests() {
+    async loadRoleRequests () {
       if (this.canPublishBooks) {
-        return;
+        return
       }
 
-      this.roleRequestsLoading = true;
-      this.roleRequestError = '';
+      this.roleRequestsLoading = true
+      this.roleRequestError = ''
 
       try {
-        this.roleRequests = await listMyRoleRequests();
+        this.roleRequests = await listMyRoleRequests()
       } catch (error) {
-        this.roleRequestError = getApiErrorMessage(error, 'Could not load editor role request status.');
+        this.roleRequestError = getApiErrorMessage(error, 'Could not load editor role request status.')
       } finally {
-        this.roleRequestsLoading = false;
+        this.roleRequestsLoading = false
       }
     },
-    continueReading() {
-      this.activeNotice = `Opened ${this.selectedBook.title}.`;
+    continueReading () {
+      this.$router.push({ name: 'NovelReader', params: { novelId: this.selectedBook.id } })
     },
-    startDraft() {
-      this.activeNotice = 'New manuscript started.';
+    startDraft () {
+      this.activeNotice = 'New manuscript started.'
     },
-    editDraft(draft) {
-      this.activeNotice = `${draft.title} opened for writing.`;
+    editDraft (draft) {
+      this.activeNotice = `${draft.title} opened for writing.`
     },
-    publishSelectedDraft() {
-      this.activeNotice = 'Draft submitted for publishing.';
+    publishSelectedDraft () {
+      this.activeNotice = 'Draft submitted for publishing.'
     },
-    async requestEditorRole() {
+    async requestEditorRole () {
       if (this.pendingRoleRequest || this.roleRequestSubmitting) {
-        return;
+        return
       }
 
-      this.roleRequestSubmitting = true;
-      this.roleRequestError = '';
-      this.activeNotice = '';
+      this.roleRequestSubmitting = true
+      this.roleRequestError = ''
+      this.activeNotice = ''
 
       try {
         const request = await createEditorRoleRequest(
           'Requested publishing access from the books workspace.'
-        );
-        this.roleRequests = [request, ...this.roleRequests];
-        this.activeNotice = 'Editor role request sent for admin approval.';
+        )
+        this.roleRequests = [request, ...this.roleRequests]
+        this.activeNotice = 'Editor role request sent for admin approval.'
       } catch (error) {
-        this.roleRequestError = getApiErrorMessage(error, 'Could not request editor role.');
+        this.roleRequestError = getApiErrorMessage(error, 'Could not request editor role.')
       } finally {
-        this.roleRequestSubmitting = false;
+        this.roleRequestSubmitting = false
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

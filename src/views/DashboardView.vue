@@ -47,32 +47,32 @@ import {
 import { useAuthStore } from '@/store/auth'
 
 export default {
-  data() {
+  data () {
     return {
       pendingPromotionCount: null,
-      promotionSummaryError: '',
-    };
+      promotionSummaryError: ''
+    }
   },
   computed: {
     ...mapState(useAuthStore, ['canApprovePromotions']),
-    promotionSummary() {
+    promotionSummary () {
       if (this.promotionSummaryError) {
-        return this.promotionSummaryError;
+        return this.promotionSummaryError
       }
 
       if (this.pendingPromotionCount === null) {
-        return 'Checking pending requests';
+        return 'Checking pending requests'
       }
 
       if (this.pendingPromotionCount === 1) {
-        return '1 pending request';
+        return '1 pending request'
       }
 
-      return `${this.pendingPromotionCount} pending requests`;
-    },
+      return `${this.pendingPromotionCount} pending requests`
+    }
   },
-  mounted() {
-    this.loadPendingPromotionCount();
+  mounted () {
+    this.loadPendingPromotionCount()
   },
   methods: {
     async loadPendingPromotionCount () {
