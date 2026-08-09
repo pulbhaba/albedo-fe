@@ -1,12 +1,12 @@
 import axios from 'axios'
 import { defineStore } from 'pinia'
 
-const API_URL = (process.env.VUE_APP_API_URL || '').replace(/\/$/, '')
+const AUTH_API_URL = (process.env.VUE_AUTH_API_URL || '').replace(/\/$/, '')
 const CLIENT_ID = process.env.VUE_APP_CLIENT_ID || 'albedo-client'
 const CLIENT_SECRET = process.env.VUE_APP_CLIENT_SECRET || 'albedo-secret'
-const TOKEN_ENDPOINT = `${API_URL}/oauth2/token`
-const REVOKE_ENDPOINT = `${API_URL}/oauth2/revoke`
-const LOGOUT_ENDPOINT = `${API_URL}/user/logout`
+const TOKEN_ENDPOINT = `${AUTH_API_URL}/oauth2/token`
+const REVOKE_ENDPOINT = `${AUTH_API_URL}/oauth2/revoke`
+const LOGOUT_ENDPOINT = `${AUTH_API_URL}/user/logout`
 const TOKEN_STORAGE_KEY = 'albedo.auth.tokens'
 const PUBLISHING_ROLES = ['ROLE_EDITOR', 'ROLE_ADMIN']
 
@@ -252,11 +252,11 @@ export function setupAuthInterceptors (pinia) {
 
       if (
         error?.response?.status === 401 &&
-                originalRequest &&
-                !requestUrl.includes('/oauth2/token') &&
-                !requestUrl.includes('/oauth2/revoke') &&
-                !requestUrl.includes('/user/logout') &&
-                !originalRequest._retry
+        originalRequest &&
+        !requestUrl.includes('/oauth2/token') &&
+        !requestUrl.includes('/oauth2/revoke') &&
+        !requestUrl.includes('/user/logout') &&
+        !originalRequest._retry
       ) {
         originalRequest._retry = true
 

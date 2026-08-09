@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = (process.env.VUE_APP_API_URL || '').replace(/\/$/, '')
+const AUTH_API_URL = (process.env.VUE_AUTH_API_URL || '').replace(/\/$/, '')
 const EDITOR_ROLE = 'ROLE_EDITOR'
 export const ROLE_REQUEST_STATUS = {
   PENDING: 'PENDING',
@@ -9,7 +9,7 @@ export const ROLE_REQUEST_STATUS = {
 }
 
 function endpoint (path) {
-  return `${API_URL}${path}`
+  return `${AUTH_API_URL}${path}`
 }
 
 export function getApiErrorMessage (error, fallbackMessage = 'Request failed.') {
