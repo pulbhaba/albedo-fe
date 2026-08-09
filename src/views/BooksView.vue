@@ -49,7 +49,27 @@
       {{ roleRequestMessage }}
     </div>
 
-    <section class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
+    <section v-if="novelsLoading" class="rounded-lg border border-black-4 bg-black-2 p-6 text-gray-2">
+      Loading books…
+    </section>
+
+    <section v-else-if="novelsError" class="rounded-lg border border-red-1/30 bg-red-1/10 p-6 text-red-1">
+      <h2 class="text-xl font-semibold">Unable to load books</h2>
+      <p class="mt-2">{{ novelsError }}</p>
+      <button
+        class="mt-4 rounded-md border border-red-1/40 px-3 py-2 text-sm font-medium hover:bg-red-1/10"
+        type="button"
+        @click="loadNovels"
+      >
+        Try again
+      </button>
+    </section>
+
+    <section v-else-if="!books.length" class="rounded-lg border border-black-4 bg-black-2 p-6 text-gray-2">
+      No books are available yet.
+    </section>
+
+    <section v-else class="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
       <div class="space-y-3">
         <article
           v-for="book in books"
@@ -59,10 +79,10 @@
           @click="selectedBookId = book.id"
         >
           <div
-            class="flex aspect-[3/4] items-end rounded-md bg-gradient-to-br p-2 text-xs font-semibold text-white"
-            :class="book.coverClass"
+            class="flex aspect-[3/4] items-end rounded-md bg-cover bg-center p-2 text-xs font-semibold text-white"
+            :style="{ backgroundImage: `url(${book.coverImageUrl})` }"
           >
-            {{ book.shortTitle }}
+            <span class="rounded bg-black-5/70 px-1">{{ book.title }}</span>
           </div>
           <div class="min-w-0">
             <div class="flex items-start justify-between gap-3">
@@ -74,34 +94,32 @@
                 {{ book.status }}
               </span>
             </div>
-            <p class="mt-3 line-clamp-2 text-sm leading-6 text-gray-2">{{ book.summary }}</p>
-            <div class="mt-4 h-2 rounded-full bg-black-3">
-              <div class="h-2 rounded-full bg-blue-2" :style="{ width: `${book.progress}%` }"></div>
-            </div>
+            <p class="mt-3 text-sm leading-6 text-gray-2">By {{ book.author }}</p>
           </div>
         </article>
       </div>
 
-      <article class="rounded-lg border border-black-4 bg-black-2 shadow-sm">
+      <article v-if="selectedBook" class="rounded-lg border border-black-4 bg-black-2 shadow-sm">
         <div class="border-b border-black-4 px-5 py-4">
-          <p class="text-sm font-medium text-gray-2">{{ selectedBook.genre }}</p>
+          <p class="text-sm font-medium uppercase tracking-wide text-blue-2">{{ selectedBook.status }}</p>
           <h2 class="mt-1 text-2xl font-semibold tracking-normal text-gray-1">{{ selectedBook.title }}</h2>
           <p class="mt-1 text-sm text-gray-2">{{ selectedBook.author }}</p>
         </div>
 
         <div class="space-y-5 px-5 py-5">
           <div class="rounded-md bg-black-3 p-5">
-            <p class="text-base leading-8 text-gray-1">{{ selectedBook.excerpt }}</p>
+            <p class="text-base leading-8 text-gray-1">This novel is available to read in the library.</p>
+            <p class="mt-3 text-sm text-gray-2">Last updated {{ selectedBook.updatedAt }}</p>
           </div>
 
           <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm font-medium text-gray-2">{{ selectedBook.progress }}% read</p>
+            <p class="text-sm font-medium text-gray-2">Published {{ selectedBook.createdAt }}</p>
             <button
               type="button"
               class="rounded-md bg-blue-2 px-4 py-2 text-sm font-medium text-white hover:bg-blue-1"
               @click="continueReading"
             >
-              Continue reading
+              Open novel
             </button>
           </div>
         </div>
@@ -122,7 +140,7 @@
           <div>
             <h3 class="font-semibold text-gray-1">{{ draft.title }}</h3>
             <p class="mt-1 text-sm text-gray-2">
-              {{ draft.words.toLocaleString() }} words &middot; {{ draft.updated }}
+              Updated {{ draft.updatedAt }}
             </p>
           </div>
 
@@ -152,81 +170,40 @@ import {
   listMyRoleRequests,
   ROLE_REQUEST_STATUS
 } from '@/api/roleRequests'
+import { getNovelsApiError, listNovels } from '@/api/novels'
 import { useAuthStore } from '@/store/auth'
 
 export default {
   name: 'BooksView',
   data () {
     return {
-      selectedBookId: 1,
+      selectedBookId: null,
+      novels: [],
+      novelsLoading: true,
+      novelsError: '',
       activeNotice: '',
       roleRequests: [],
       roleRequestsLoading: false,
       roleRequestSubmitting: false,
-      roleRequestError: '',
-      books: [
-        {
-          id: 1,
-          title: 'The Lantern Archive',
-          shortTitle: 'LA',
-          author: 'Maya Senanayake',
-          genre: 'Literary fantasy',
-          status: 'Published',
-          progress: 64,
-          coverClass: 'from-emerald-800 to-teal-500',
-          summary: 'A city archivist finds a sealed room where unfinished lives are catalogued by lamplight.',
-          excerpt:
-            'The archive woke before the city did. Lamps clicked on in their brass cages, one by one, until the hall became a river of warm light and paper dust. Nila pressed her palm to the oldest drawer and felt it answer with a pulse.'
-        },
-        {
-          id: 2,
-          title: 'A Map of Quiet Seas',
-          shortTitle: 'QS',
-          author: 'Jon Bell',
-          genre: 'Adventure',
-          status: 'Published',
-          progress: 18,
-          coverClass: 'from-sky-700 to-cyan-500',
-          summary: 'Two cartographers cross a windless ocean that refuses to stay mapped.',
-          excerpt:
-            'By noon the compass had chosen east, then north, then the precise direction of a memory Mara had never told anyone. The sea around them stayed flat as polished glass, reflecting a sky without clouds or mercy.'
-        },
-        {
-          id: 3,
-          title: 'The Orchard After Rain',
-          shortTitle: 'OR',
-          author: 'Leena Arul',
-          genre: 'Contemporary',
-          status: 'Published',
-          progress: 91,
-          coverClass: 'from-amber-700 to-rose-500',
-          summary: 'A family returns to an abandoned orchard and negotiates what should be preserved.',
-          excerpt:
-            'Rainwater gathered in the cracked steps like small mirrors. Every branch in the orchard held a bead of light, and for the first time in twenty years, Kavish could name the place without lowering his voice.'
-        }
-      ],
-      drafts: [
-        {
-          id: 'draft-1',
-          title: 'Untitled rainfall chapter',
-          status: 'Draft',
-          words: 4280,
-          updated: 'Updated today'
-        },
-        {
-          id: 'draft-2',
-          title: 'Chapter 4: The Glass Road',
-          status: 'Ready for review',
-          words: 12140,
-          updated: 'Updated yesterday'
-        }
-      ]
+      roleRequestError: ''
     }
   },
   computed: {
     ...mapState(useAuthStore, ['canPublishBooks']),
     selectedBook () {
-      return this.books.find((book) => book.id === this.selectedBookId) || this.books[0]
+      return this.books.find((book) => book.id === this.selectedBookId) || this.books[0] || null
+    },
+    books () {
+      return this.novels.filter((novel) => novel.status === 'published')
+    },
+    drafts () {
+      return this.novels.filter((novel) => novel.status === 'draft')
+    },
+    novelView () {
+      return (novel) => ({
+        ...novel,
+        author: novel.author?.displayName || 'Unknown author'
+      })
     },
     pendingRoleRequest () {
       return this.roleRequests.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
@@ -277,9 +254,26 @@ export default {
     }
   },
   mounted () {
+    this.loadNovels()
     this.loadRoleRequests()
   },
   methods: {
+    async loadNovels () {
+      this.novelsLoading = true
+      this.novelsError = ''
+
+      try {
+        const page = await listNovels({ limit: 100 })
+        this.novels = (page.items || []).map(this.novelView)
+        this.selectedBookId = this.books[0]?.id || null
+      } catch (error) {
+        this.novels = []
+        this.selectedBookId = null
+        this.novelsError = getNovelsApiError(error)
+      } finally {
+        this.novelsLoading = false
+      }
+    },
     async loadRoleRequests () {
       if (this.canPublishBooks) {
         return

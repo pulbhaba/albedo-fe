@@ -22,6 +22,7 @@ relative API paths such as `/oauth2/token`, and the dev server forwards `/oauth2
 ```
 VUE_APP_API_URL=
 VUE_APP_BACKEND_PROXY_TARGET=http://localhost:8080
+VUE_APP_NOVEL_SERVICE_PROXY_TARGET=http://localhost:8000
 VUE_APP_CLIENT_ID=albedo-client
 VUE_APP_CLIENT_SECRET=albedo-secret
 ```
@@ -29,6 +30,10 @@ VUE_APP_CLIENT_SECRET=albedo-secret
 Copy `.env.sample` to `.env` if you need to override these values. Set
 `VUE_APP_API_URL` only when the frontend should call a backend directly instead
 of using the local dev proxy.
+
+Novel listings use the authenticated novel service at `GET /novels`. Local
+development proxies that path to `VUE_APP_NOVEL_SERVICE_PROXY_TARGET`; set
+`VUE_APP_NOVEL_SERVICE_API_URL` when the novel service is hosted separately.
 
 ### Compiles and hot-reloads for development
 ```
