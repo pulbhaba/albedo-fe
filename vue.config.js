@@ -8,11 +8,11 @@ module.exports = defineConfig({
   devServer: {
     port: Number(process.env.VUE_APP_DEV_SERVER_PORT) || 8081,
     proxy: {
-      '^/(oauth2|public|user|admin|books|library|actuator)': {
+      '^/(oauth2|public|user|admin|actuator)': {
         target: authTarget,
         changeOrigin: true
       },
-      '^/novels': {
+      '^/(novels|library)': {
         target: novelsTarget,
         changeOrigin: true
       }
