@@ -65,19 +65,20 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import {
   getLibraryApiError,
   getLibraryRemovalError,
   listLibrary,
-  removeFavorite
+  removeFavorite,
+  LibraryItem
 } from '@/api/library'
 
-const items = ref([])
+const items = ref<LibraryItem[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
-const removingNovelId = ref(null)
+const removingNovelId = ref<string | number | null>(null)
 
 async function loadLibrary () {
   loading.value = true
@@ -94,7 +95,7 @@ async function loadLibrary () {
   }
 }
 
-async function removeFromLibrary (novelId) {
+async function removeFromLibrary (novelId: string | number): Promise<void> {
   if (removingNovelId.value) {
     return
   }
@@ -112,7 +113,7 @@ async function removeFromLibrary (novelId) {
   }
 }
 
-function authorName (novel) {
+function authorName (novel: LibraryItem['novel']): string {
   return novel.author?.displayName || 'Unknown author'
 }
 

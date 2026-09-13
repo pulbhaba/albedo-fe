@@ -162,16 +162,17 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import {
   createEditorRoleRequest,
   getApiErrorMessage,
   listMyRoleRequests,
-  ROLE_REQUEST_STATUS
+  ROLE_REQUEST_STATUS,
+  RoleRequest
 } from '@/api/roleRequests'
-import { getNovelsApiError, listNovels } from '@/api/novels'
+import { getNovelsApiError, listNovels, Novel } from '@/api/novels'
 import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'vue-router'
 
@@ -179,12 +180,12 @@ const router = useRouter()
 const authStore = useAuthStore()
 const { canPublishBooks } = storeToRefs(authStore)
 
-const selectedBookId = ref(null)
-const novels = ref([])
+const selectedBookId = ref<string | number | null>(null)
+const novels = ref<Novel[]>([])
 const novelsLoading = ref(true)
 const novelsError = ref('')
 const activeNotice = ref('')
-const roleRequests = ref([])
+const roleRequests = ref<RoleRequest[]>([])
 const roleRequestsLoading = ref(false)
 const roleRequestSubmitting = ref(false)
 const roleRequestError = ref('')
@@ -240,7 +241,7 @@ const roleRequestMessageClass = computed(() => {
   return 'border-blue-2/30 bg-blue-2/10 text-blue-2'
 })
 
-function novelView (novel) {
+function novelView (novel: Novel): Novel {
   return {
     ...novel,
     author: novel.author?.displayName || 'Unknown author'
@@ -289,7 +290,7 @@ function startDraft () {
   activeNotice.value = 'New manuscript started.'
 }
 
-function editDraft (draft) {
+function editDraft (draft: Novel): void {
   activeNotice.value = `${draft.title} opened for writing.`
 }
 

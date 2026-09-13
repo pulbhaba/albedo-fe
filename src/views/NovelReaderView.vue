@@ -27,13 +27,13 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { getNovel, getNovelApiError } from '@/api/novels'
+import { getNovel, getNovelApiError, Novel } from '@/api/novels'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const novel = ref(null)
+const novel = ref<Novel | null>(null)
 const loading = ref(true)
 const errorMessage = ref('')
 
