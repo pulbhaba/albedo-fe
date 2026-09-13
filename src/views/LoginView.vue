@@ -77,42 +77,42 @@
   </div>
 </template>
 
-<script>
-import { mapActions } from 'pinia'
+<script setup>
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/store/auth'
+import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  data () {
-    return {
-      username: '',
-      password: '',
-      errorMessage: null
+const authStore = useAuthStore()
+const route = useRoute()
+const router = useRouter()
+const { t } = useI18n()
+
+const username = ref('')
+const password = ref('')
+const errorMessage = ref(null)
+
+async function handleLogin () {
+  try {
+    const credentials = {
+      username: username.value,
+      password: password.value
     }
-  },
-  methods: {
-    ...mapActions(useAuthStore, ['login']),
-    async handleLogin () {
-      try {
-        const credentials = {
-          username: this.username,
-          password: this.password
-        }
 
-        // Make API call to authenticate user
-        await this.login(credentials)
+    // Make API call to authenticate user
+    await authStore.login(credentials)
 
-        // After successful login, redirect to dashboard or home page
-        this.$router.push(this.$route.query.redirect || '/dashboard')
-      } catch (error) {
-        // Handle error (e.g., invalid credentials)
-        this.errorMessage = this.$t('login.errorMessage')
-      }
-    },
-    forgotPassword () {
-      // Handle "Forgot Password" logic (e.g., navigate to password reset page)
-      this.$router.push('/forgot-password')
-    }
+    // After successful login, redirect to dashboard or home page
+    router.push(route.query.redirect || '/dashboard')
+  } catch (error) {
+    // Handle error (e.g., invalid credentials)
+    errorMessage.value = t('login.errorMessage')
   }
+}
+
+function forgotPassword () {
+  // Handle "Forgot Password" logic (e.g., navigate to password reset page)
+  router.push('/forgot-password')
 }
 </script>
 
