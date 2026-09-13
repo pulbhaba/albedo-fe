@@ -11,8 +11,6 @@
   </section>
 </template>
 
-<script>
-export default {
-  name: 'ForbiddenView'
-}
+<script setup>
+// This view has no local state or setup behavior.
 </script>

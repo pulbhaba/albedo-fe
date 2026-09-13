@@ -57,21 +57,17 @@
   </div>
 </template>
 
-<script>
-import { mapActions, mapState } from 'pinia'
+<script setup>
+import { storeToRefs } from 'pinia'
 import { useAuthStore } from '@/store/auth'
+import { useRouter } from 'vue-router'
 
-export default {
-  name: 'App',
-  computed: {
-    ...mapState(useAuthStore, ['isAuthenticated', 'username', 'canApprovePromotions'])
-  },
-  methods: {
-    ...mapActions(useAuthStore, ['logout']),
-    async handleLogout () {
-      await this.logout()
-      this.$router.push('/login')
-    }
-  }
+const authStore = useAuthStore()
+const router = useRouter()
+const { isAuthenticated, username, canApprovePromotions } = storeToRefs(authStore)
+
+async function handleLogout () {
+  await authStore.logout()
+  router.push('/login')
 }
 </script>

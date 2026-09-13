@@ -37,8 +37,9 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'pinia'
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import {
   getApiErrorMessage,
   listPromotionRequests,
@@ -46,49 +47,44 @@ import {
 } from '@/api/roleRequests'
 import { useAuthStore } from '@/store/auth'
 
-export default {
-  data () {
-    return {
-      pendingPromotionCount: null,
-      promotionSummaryError: ''
-    }
-  },
-  computed: {
-    ...mapState(useAuthStore, ['canApprovePromotions']),
-    promotionSummary () {
-      if (this.promotionSummaryError) {
-        return this.promotionSummaryError
-      }
+const authStore = useAuthStore()
+const { canApprovePromotions } = storeToRefs(authStore)
 
-      if (this.pendingPromotionCount === null) {
-        return 'Checking pending requests'
-      }
+const pendingPromotionCount = ref(null)
+const promotionSummaryError = ref('')
 
-      if (this.pendingPromotionCount === 1) {
-        return '1 pending request'
-      }
+const promotionSummary = computed(() => {
+  if (promotionSummaryError.value) {
+    return promotionSummaryError.value
+  }
 
-      return `${this.pendingPromotionCount} pending requests`
-    }
-  },
-  mounted () {
-    this.loadPendingPromotionCount()
-  },
-  methods: {
-    async loadPendingPromotionCount () {
-      if (!this.canApprovePromotions) {
-        return
-      }
+  if (pendingPromotionCount.value === null) {
+    return 'Checking pending requests'
+  }
 
-      this.promotionSummaryError = ''
+  if (pendingPromotionCount.value === 1) {
+    return '1 pending request'
+  }
 
-      try {
-        const requests = await listPromotionRequests(ROLE_REQUEST_STATUS.PENDING)
-        this.pendingPromotionCount = requests.length
-      } catch (error) {
-        this.promotionSummaryError = getApiErrorMessage(error, 'Could not load requests')
-      }
-    }
+  return `${pendingPromotionCount.value} pending requests`
+})
+
+async function loadPendingPromotionCount () {
+  if (!canApprovePromotions.value) {
+    return
+  }
+
+  promotionSummaryError.value = ''
+
+  try {
+    const requests = await listPromotionRequests(ROLE_REQUEST_STATUS.PENDING)
+    pendingPromotionCount.value = requests.length
+  } catch (error) {
+    promotionSummaryError.value = getApiErrorMessage(error, 'Could not load requests')
   }
 }
+
+onMounted(() => {
+  loadPendingPromotionCount()
+})
 </script>

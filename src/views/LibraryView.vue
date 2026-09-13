@@ -65,7 +65,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { onMounted, ref } from 'vue'
 import {
   getLibraryApiError,
   getLibraryRemovalError,
@@ -73,54 +74,49 @@ import {
   removeFavorite
 } from '@/api/library'
 
-export default {
-  name: 'LibraryView',
-  data () {
-    return {
-      items: [],
-      loading: true,
-      errorMessage: '',
-      removingNovelId: null
-    }
-  },
-  mounted () {
-    this.loadLibrary()
-  },
-  methods: {
-    async loadLibrary () {
-      this.loading = true
-      this.errorMessage = ''
+const items = ref([])
+const loading = ref(true)
+const errorMessage = ref('')
+const removingNovelId = ref(null)
 
-      try {
-        const library = await listLibrary()
-        this.items = library.items || []
-      } catch (error) {
-        this.items = []
-        this.errorMessage = getLibraryApiError(error)
-      } finally {
-        this.loading = false
-      }
-    },
-    async removeFromLibrary (novelId) {
-      if (this.removingNovelId) {
-        return
-      }
+async function loadLibrary () {
+  loading.value = true
+  errorMessage.value = ''
 
-      this.removingNovelId = novelId
-      this.errorMessage = ''
-
-      try {
-        await removeFavorite(novelId)
-        this.items = this.items.filter((item) => item.novel.id !== novelId)
-      } catch (error) {
-        this.errorMessage = getLibraryRemovalError(error)
-      } finally {
-        this.removingNovelId = null
-      }
-    },
-    authorName (novel) {
-      return novel.author?.displayName || 'Unknown author'
-    }
+  try {
+    const library = await listLibrary()
+    items.value = library.items || []
+  } catch (error) {
+    items.value = []
+    errorMessage.value = getLibraryApiError(error)
+  } finally {
+    loading.value = false
   }
 }
+
+async function removeFromLibrary (novelId) {
+  if (removingNovelId.value) {
+    return
+  }
+
+  removingNovelId.value = novelId
+  errorMessage.value = ''
+
+  try {
+    await removeFavorite(novelId)
+    items.value = items.value.filter((item) => item.novel.id !== novelId)
+  } catch (error) {
+    errorMessage.value = getLibraryRemovalError(error)
+  } finally {
+    removingNovelId.value = null
+  }
+}
+
+function authorName (novel) {
+  return novel.author?.displayName || 'Unknown author'
+}
+
+onMounted(() => {
+  loadLibrary()
+})
 </script>

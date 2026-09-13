@@ -86,7 +86,8 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { computed, onMounted, ref } from 'vue'
 import {
   approvePromotionRequest,
   getApiErrorMessage,
@@ -95,96 +96,94 @@ import {
   ROLE_REQUEST_STATUS
 } from '@/api/roleRequests'
 
-export default {
-  name: 'PromotionApprovalsView',
-  data () {
-    return {
-      requests: [],
-      isLoading: false,
-      errorMessage: '',
-      resolvingRequestId: null
-    }
-  },
-  computed: {
-    pendingRequests () {
-      return this.requests.filter((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
-    }
-  },
-  mounted () {
-    this.loadRequests()
-  },
-  methods: {
-    async loadRequests () {
-      this.isLoading = true
-      this.errorMessage = ''
+const requests = ref([])
+const isLoading = ref(false)
+const errorMessage = ref('')
+const resolvingRequestId = ref(null)
 
-      try {
-        this.requests = await listPromotionRequests()
-      } catch (error) {
-        this.errorMessage = getApiErrorMessage(error, 'Could not load promotion requests.')
-      } finally {
-        this.isLoading = false
-      }
-    },
-    async approveRequest (request) {
-      await this.resolveRequest(request, approvePromotionRequest, 'Approved from promotion queue.')
-    },
-    async rejectRequest (request) {
-      await this.resolveRequest(request, rejectPromotionRequest, 'Rejected from promotion queue.')
-    },
-    async resolveRequest (request, action, reason) {
-      if (this.resolvingRequestId) {
-        return
-      }
+const pendingRequests = computed(() => {
+  return requests.value.filter((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
+})
 
-      this.resolvingRequestId = request.id
-      this.errorMessage = ''
+async function loadRequests () {
+  isLoading.value = true
+  errorMessage.value = ''
 
-      try {
-        const updatedRequest = await action(request.id, reason)
-        this.replaceRequest(updatedRequest)
-      } catch (error) {
-        this.errorMessage = getApiErrorMessage(error, 'Could not resolve promotion request.')
-      } finally {
-        this.resolvingRequestId = null
-      }
-    },
-    replaceRequest (updatedRequest) {
-      this.requests = this.requests.map((request) =>
-        request.id === updatedRequest.id ? updatedRequest : request
-      )
-    },
-    displayName (request) {
-      return [request.firstName, request.lastName].filter(Boolean).join(' ') || request.username
-    },
-    statusLabel (status) {
-      if (!status) {
-        return ''
-      }
-
-      return status.charAt(0) + status.slice(1).toLowerCase()
-    },
-    resolvedLabel (request) {
-      if (!request.resolvedAt) {
-        return ''
-      }
-
-      return new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-      }).format(new Date(request.resolvedAt))
-    },
-    statusClass (status) {
-      if (status === ROLE_REQUEST_STATUS.APPROVED) {
-        return 'bg-blue-2/10 text-blue-2'
-      }
-
-      if (status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'bg-red-1/10 text-red-1'
-      }
-
-      return 'bg-black-3 text-gray-2'
-    }
+  try {
+    requests.value = await listPromotionRequests()
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(error, 'Could not load promotion requests.')
+  } finally {
+    isLoading.value = false
   }
 }
+
+async function approveRequest (request) {
+  await resolveRequest(request, approvePromotionRequest, 'Approved from promotion queue.')
+}
+
+async function rejectRequest (request) {
+  await resolveRequest(request, rejectPromotionRequest, 'Rejected from promotion queue.')
+}
+
+async function resolveRequest (request, action, reason) {
+  if (resolvingRequestId.value) {
+    return
+  }
+
+  resolvingRequestId.value = request.id
+  errorMessage.value = ''
+
+  try {
+    const updatedRequest = await action(request.id, reason)
+    replaceRequest(updatedRequest)
+  } catch (error) {
+    errorMessage.value = getApiErrorMessage(error, 'Could not resolve promotion request.')
+  } finally {
+    resolvingRequestId.value = null
+  }
+}
+
+function replaceRequest (updatedRequest) {
+  requests.value = requests.value.map((request) =>
+    request.id === updatedRequest.id ? updatedRequest : request
+  )
+}
+
+function displayName (request) {
+  return [request.firstName, request.lastName].filter(Boolean).join(' ') || request.username
+}
+
+function statusLabel (status) {
+  if (!status) {
+    return ''
+  }
+
+  return status.charAt(0) + status.slice(1).toLowerCase()
+}
+
+function resolvedLabel (request) {
+  if (!request.resolvedAt) {
+    return ''
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(request.resolvedAt))
+}
+
+function statusClass (status) {
+  if (status === ROLE_REQUEST_STATUS.APPROVED) {
+    return 'bg-blue-2/10 text-blue-2'
+  }
+
+  if (status === ROLE_REQUEST_STATUS.REJECTED) {
+    return 'bg-red-1/10 text-red-1'
+  }
+
+  return 'bg-black-3 text-gray-2'
+}
+
+onMounted(loadRequests)
 </script>

@@ -27,38 +27,30 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { onMounted, ref, watch } from 'vue'
 import { getNovel, getNovelApiError } from '@/api/novels'
+import { useRoute } from 'vue-router'
 
-export default {
-  name: 'NovelReaderView',
-  data () {
-    return {
-      novel: null,
-      loading: true,
-      errorMessage: ''
-    }
-  },
-  watch: {
-    '$route.params.novelId': 'loadNovel'
-  },
-  mounted () {
-    this.loadNovel()
-  },
-  methods: {
-    async loadNovel () {
-      this.loading = true
-      this.errorMessage = ''
+const route = useRoute()
+const novel = ref(null)
+const loading = ref(true)
+const errorMessage = ref('')
 
-      try {
-        this.novel = await getNovel(this.$route.params.novelId)
-      } catch (error) {
-        this.novel = null
-        this.errorMessage = getNovelApiError(error)
-      } finally {
-        this.loading = false
-      }
-    }
+async function loadNovel () {
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    novel.value = await getNovel(route.params.novelId)
+  } catch (error) {
+    novel.value = null
+    errorMessage.value = getNovelApiError(error)
+  } finally {
+    loading.value = false
   }
 }
+
+onMounted(loadNovel)
+watch(() => route.params.novelId, loadNovel)
 </script>
