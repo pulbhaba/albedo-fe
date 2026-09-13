@@ -43,6 +43,16 @@ The project uses `tsconfig.json` and the Vue CLI TypeScript plugin. Source
 migration is incremental: new shared modules should use TypeScript, while
 existing JavaScript modules can be migrated in focused changes.
 
+### Vue component conventions
+
+New components and focused migrations should use the Composition API with
+`<script setup>`. Keep component-local state in `ref` values, derive display
+state with `computed`, and use lifecycle hooks such as `onMounted` for setup
+work. Access Pinia stores with `useStore()` and `storeToRefs()` for reactive
+state, and use Vue Router composables instead of `this.$router` or
+`this.$route`. Preserve the existing relative API paths and explicit loading,
+empty, error, and forbidden states when migrating a component.
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve

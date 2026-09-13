@@ -162,8 +162,9 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'pinia'
+<script setup>
+import { computed, onMounted, ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import {
   createEditorRoleRequest,
   getApiErrorMessage,
@@ -172,157 +173,154 @@ import {
 } from '@/api/roleRequests'
 import { getNovelsApiError, listNovels } from '@/api/novels'
 import { useAuthStore } from '@/store/auth'
+import { useRouter } from 'vue-router'
 
-export default {
-  name: 'BooksView',
-  data () {
-    return {
-      selectedBookId: null,
-      novels: [],
-      novelsLoading: true,
-      novelsError: '',
-      activeNotice: '',
-      roleRequests: [],
-      roleRequestsLoading: false,
-      roleRequestSubmitting: false,
-      roleRequestError: ''
-    }
-  },
-  computed: {
-    ...mapState(useAuthStore, ['canPublishBooks']),
-    selectedBook () {
-      return this.books.find((book) => book.id === this.selectedBookId) || this.books[0] || null
-    },
-    books () {
-      return this.novels.filter((novel) => novel.status === 'published')
-    },
-    drafts () {
-      return this.novels.filter((novel) => novel.status === 'draft')
-    },
-    novelView () {
-      return (novel) => ({
-        ...novel,
-        author: novel.author?.displayName || 'Unknown author'
-      })
-    },
-    pendingRoleRequest () {
-      return this.roleRequests.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
-    },
-    latestRoleRequest () {
-      return this.roleRequests[0] || null
-    },
-    editorRequestButtonLabel () {
-      if (this.roleRequestSubmitting) {
-        return 'Sending request'
-      }
+const router = useRouter()
+const authStore = useAuthStore()
+const { canPublishBooks } = storeToRefs(authStore)
 
-      if (this.pendingRoleRequest) {
-        return 'Request pending'
-      }
+const selectedBookId = ref(null)
+const novels = ref([])
+const novelsLoading = ref(true)
+const novelsError = ref('')
+const activeNotice = ref('')
+const roleRequests = ref([])
+const roleRequestsLoading = ref(false)
+const roleRequestSubmitting = ref(false)
+const roleRequestError = ref('')
 
-      return 'Request editor role'
-    },
-    roleRequestMessage () {
-      if (this.canPublishBooks) {
-        return ''
-      }
+const books = computed(() => novels.value.filter((novel) => novel.status === 'published'))
+const drafts = computed(() => novels.value.filter((novel) => novel.status === 'draft'))
+const selectedBook = computed(() => {
+  return books.value.find((book) => book.id === selectedBookId.value) || books.value[0] || null
+})
+const pendingRoleRequest = computed(() => {
+  return roleRequests.value.find((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
+})
+const latestRoleRequest = computed(() => roleRequests.value[0] || null)
+const editorRequestButtonLabel = computed(() => {
+  if (roleRequestSubmitting.value) {
+    return 'Sending request'
+  }
 
-      if (this.roleRequestsLoading) {
-        return 'Checking editor role request status.'
-      }
+  if (pendingRoleRequest.value) {
+    return 'Request pending'
+  }
 
-      if (this.roleRequestError) {
-        return this.roleRequestError
-      }
+  return 'Request editor role'
+})
+const roleRequestMessage = computed(() => {
+  if (canPublishBooks.value) {
+    return ''
+  }
 
-      if (this.pendingRoleRequest) {
-        return 'Your editor role request is waiting for admin approval.'
-      }
+  if (roleRequestsLoading.value) {
+    return 'Checking editor role request status.'
+  }
 
-      if (this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'Your latest editor role request was rejected. You can submit a new request.'
-      }
+  if (roleRequestError.value) {
+    return roleRequestError.value
+  }
 
-      return ''
-    },
-    roleRequestMessageClass () {
-      if (this.roleRequestError || this.latestRoleRequest?.status === ROLE_REQUEST_STATUS.REJECTED) {
-        return 'border-red-1/30 bg-red-1/10 text-red-1'
-      }
+  if (pendingRoleRequest.value) {
+    return 'Your editor role request is waiting for admin approval.'
+  }
 
-      return 'border-blue-2/30 bg-blue-2/10 text-blue-2'
-    }
-  },
-  mounted () {
-    this.loadNovels()
-    this.loadRoleRequests()
-  },
-  methods: {
-    async loadNovels () {
-      this.novelsLoading = true
-      this.novelsError = ''
+  if (latestRoleRequest.value?.status === ROLE_REQUEST_STATUS.REJECTED) {
+    return 'Your latest editor role request was rejected. You can submit a new request.'
+  }
 
-      try {
-        const page = await listNovels({ limit: 100 })
-        this.novels = (page.items || []).map(this.novelView)
-        this.selectedBookId = this.books[0]?.id || null
-      } catch (error) {
-        this.novels = []
-        this.selectedBookId = null
-        this.novelsError = getNovelsApiError(error)
-      } finally {
-        this.novelsLoading = false
-      }
-    },
-    async loadRoleRequests () {
-      if (this.canPublishBooks) {
-        return
-      }
+  return ''
+})
+const roleRequestMessageClass = computed(() => {
+  if (roleRequestError.value || latestRoleRequest.value?.status === ROLE_REQUEST_STATUS.REJECTED) {
+    return 'border-red-1/30 bg-red-1/10 text-red-1'
+  }
 
-      this.roleRequestsLoading = true
-      this.roleRequestError = ''
+  return 'border-blue-2/30 bg-blue-2/10 text-blue-2'
+})
 
-      try {
-        this.roleRequests = await listMyRoleRequests()
-      } catch (error) {
-        this.roleRequestError = getApiErrorMessage(error, 'Could not load editor role request status.')
-      } finally {
-        this.roleRequestsLoading = false
-      }
-    },
-    continueReading () {
-      this.$router.push({ name: 'NovelReader', params: { novelId: this.selectedBook.id } })
-    },
-    startDraft () {
-      this.activeNotice = 'New manuscript started.'
-    },
-    editDraft (draft) {
-      this.activeNotice = `${draft.title} opened for writing.`
-    },
-    publishSelectedDraft () {
-      this.activeNotice = 'Draft submitted for publishing.'
-    },
-    async requestEditorRole () {
-      if (this.pendingRoleRequest || this.roleRequestSubmitting) {
-        return
-      }
-
-      this.roleRequestSubmitting = true
-      this.roleRequestError = ''
-      this.activeNotice = ''
-
-      try {
-        const request = await createEditorRoleRequest(
-          'Requested publishing access from the books workspace.'
-        )
-        this.roleRequests = [request, ...this.roleRequests]
-        this.activeNotice = 'Editor role request sent for admin approval.'
-      } catch (error) {
-        this.roleRequestError = getApiErrorMessage(error, 'Could not request editor role.')
-      } finally {
-        this.roleRequestSubmitting = false
-      }
-    }
+function novelView (novel) {
+  return {
+    ...novel,
+    author: novel.author?.displayName || 'Unknown author'
   }
 }
+
+async function loadNovels () {
+  novelsLoading.value = true
+  novelsError.value = ''
+
+  try {
+    const page = await listNovels({ limit: 100 })
+    novels.value = (page.items || []).map(novelView)
+    selectedBookId.value = books.value[0]?.id || null
+  } catch (error) {
+    novels.value = []
+    selectedBookId.value = null
+    novelsError.value = getNovelsApiError(error)
+  } finally {
+    novelsLoading.value = false
+  }
+}
+
+async function loadRoleRequests () {
+  if (canPublishBooks.value) {
+    return
+  }
+
+  roleRequestsLoading.value = true
+  roleRequestError.value = ''
+
+  try {
+    roleRequests.value = await listMyRoleRequests()
+  } catch (error) {
+    roleRequestError.value = getApiErrorMessage(error, 'Could not load editor role request status.')
+  } finally {
+    roleRequestsLoading.value = false
+  }
+}
+
+function continueReading () {
+  router.push({ name: 'NovelReader', params: { novelId: selectedBook.value.id } })
+}
+
+function startDraft () {
+  activeNotice.value = 'New manuscript started.'
+}
+
+function editDraft (draft) {
+  activeNotice.value = `${draft.title} opened for writing.`
+}
+
+function publishSelectedDraft () {
+  activeNotice.value = 'Draft submitted for publishing.'
+}
+
+async function requestEditorRole () {
+  if (pendingRoleRequest.value || roleRequestSubmitting.value) {
+    return
+  }
+
+  roleRequestSubmitting.value = true
+  roleRequestError.value = ''
+  activeNotice.value = ''
+
+  try {
+    const request = await createEditorRoleRequest(
+      'Requested publishing access from the books workspace.'
+    )
+    roleRequests.value = [request, ...roleRequests.value]
+    activeNotice.value = 'Editor role request sent for admin approval.'
+  } catch (error) {
+    roleRequestError.value = getApiErrorMessage(error, 'Could not request editor role.')
+  } finally {
+    roleRequestSubmitting.value = false
+  }
+}
+
+onMounted(() => {
+  loadNovels()
+  loadRoleRequests()
+})
 </script>
