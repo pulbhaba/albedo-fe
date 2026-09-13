@@ -19,6 +19,13 @@
             Books
           </router-link>
           <router-link
+            to="/library"
+            class="rounded-md px-3 py-2 text-sm font-medium text-gray-2 hover:bg-black-3 hover:text-gray-1"
+            active-class="bg-blue-2/10 text-blue-2"
+          >
+            Library
+          </router-link>
+          <router-link
             to="/dashboard"
             class="rounded-md px-3 py-2 text-sm font-medium text-gray-2 hover:bg-black-3 hover:text-gray-1"
             active-class="bg-blue-2/10 text-blue-2"
