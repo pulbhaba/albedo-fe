@@ -11,6 +11,6 @@
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // This view has no local state or setup behavior.
 </script>

@@ -1,5 +1,31 @@
-import axios from 'axios'
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { defineStore } from 'pinia'
+
+interface StoredTokens {
+  accessToken: string
+  refreshToken?: string | null
+}
+
+interface TokenResponse {
+  'access_token': string
+  'refresh_token'?: string
+}
+
+interface TokenPayload {
+  sub?: string
+  roles?: unknown
+  authorities?: unknown
+}
+
+interface Session {
+  user: { username: string } | null
+  roles: string[]
+}
+
+interface Credentials {
+  username: string
+  password: string
+}
 
 const AUTH_API_URL = (process.env.VUE_AUTH_API_URL || '').replace(/\/$/, '')
 const CLIENT_ID = process.env.VUE_APP_CLIENT_ID || 'albedo-client'
@@ -10,7 +36,7 @@ const LOGOUT_ENDPOINT = `${AUTH_API_URL}/user/logout`
 const TOKEN_STORAGE_KEY = 'albedo.auth.tokens'
 const PUBLISHING_ROLES = ['ROLE_EDITOR', 'ROLE_ADMIN']
 
-function decodeBase64Url (value) {
+function decodeBase64Url (value: string): string {
   if (typeof window === 'undefined') {
     return ''
   }
@@ -27,7 +53,7 @@ function decodeBase64Url (value) {
   )
 }
 
-function decodeAccessToken (accessToken) {
+function decodeAccessToken (accessToken?: string | null): TokenPayload {
   if (!accessToken) {
     return {}
   }
@@ -39,9 +65,9 @@ function decodeAccessToken (accessToken) {
   }
 }
 
-function normalizeRoles (rawRoles) {
+function normalizeRoles (rawRoles: unknown): string[] {
   if (Array.isArray(rawRoles)) {
-    return rawRoles.filter(Boolean)
+    return rawRoles.filter((role): role is string => typeof role === 'string' && Boolean(role))
   }
 
   if (typeof rawRoles === 'string') {
@@ -54,7 +80,7 @@ function normalizeRoles (rawRoles) {
   return []
 }
 
-function buildSession (accessToken) {
+function buildSession (accessToken?: string | null): Session {
   const payload = decodeAccessToken(accessToken)
   const username = payload.sub || null
 
@@ -64,19 +90,20 @@ function buildSession (accessToken) {
   }
 }
 
-function getStoredTokens () {
+function getStoredTokens (): StoredTokens | null {
   if (typeof window === 'undefined') {
     return null
   }
 
   try {
-    return JSON.parse(window.localStorage.getItem(TOKEN_STORAGE_KEY))
+    const storedTokens = window.localStorage.getItem(TOKEN_STORAGE_KEY)
+    return storedTokens ? JSON.parse(storedTokens) as StoredTokens : null
   } catch {
     return null
   }
 }
 
-function storeTokens (tokens) {
+function storeTokens (tokens: StoredTokens): void {
   if (typeof window === 'undefined') {
     return
   }
@@ -92,7 +119,7 @@ function removeStoredTokens () {
   window.localStorage.removeItem(TOKEN_STORAGE_KEY)
 }
 
-function buildTokenRequestBody (params) {
+function buildTokenRequestBody (params: Record<string, string>): URLSearchParams {
   const body = new URLSearchParams()
 
   Object.entries({
@@ -108,7 +135,7 @@ function buildTokenRequestBody (params) {
   return body
 }
 
-function applyAuthHeader (accessToken) {
+function applyAuthHeader (accessToken: string | null): void {
   if (accessToken) {
     axios.defaults.headers.common.Authorization = `Bearer ${accessToken}`
   } else {
@@ -116,21 +143,21 @@ function applyAuthHeader (accessToken) {
   }
 }
 
-function requestToken (params) {
-  return axios.post(TOKEN_ENDPOINT, buildTokenRequestBody(params), {
+function requestToken (params: Record<string, string>): Promise<AxiosResponse<TokenResponse>> {
+  return axios.post<TokenResponse>(TOKEN_ENDPOINT, buildTokenRequestBody(params), {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   })
 }
 
-function requestLogout (refreshToken) {
+function requestLogout (refreshToken: string | null): Promise<AxiosResponse> {
   return axios.post(LOGOUT_ENDPOINT, {
     refreshToken
   })
 }
 
-function requestTokenRevocation (token, tokenTypeHint) {
+function requestTokenRevocation (token: string, tokenTypeHint: string): Promise<AxiosResponse> {
   return axios.post(
     REVOKE_ENDPOINT,
     buildTokenRequestBody({
@@ -164,22 +191,23 @@ export const useAuthStore = defineStore('auth', {
   },
   getters: {
     username: (state) => state.user?.username || null,
-    hasRole: (state) => (role) => state.roles.includes(role),
+    hasRole: (state) => (role: string) => state.roles.includes(role),
     canApprovePromotions: (state) => state.roles.includes('ROLE_ADMIN'),
     canPublishBooks: (state) => state.roles.some((role) => PUBLISHING_ROLES.includes(role))
   },
   actions: {
-    setTokens (tokens) {
-      const session = buildSession(tokens.access_token)
+    setTokens (tokens: TokenResponse): void {
+      const accessToken = tokens.access_token
+      const session = buildSession(accessToken)
 
-      this.accessToken = tokens.access_token
+      this.accessToken = accessToken
       this.refreshTokenValue = tokens.refresh_token || this.refreshTokenValue
       this.isAuthenticated = true
       this.user = session.user
       this.roles = session.roles
-      applyAuthHeader(tokens.access_token)
+      applyAuthHeader(accessToken)
       storeTokens({
-        accessToken: this.accessToken,
+        accessToken,
         refreshToken: this.refreshTokenValue
       })
     },
@@ -192,7 +220,7 @@ export const useAuthStore = defineStore('auth', {
       applyAuthHeader(null)
       removeStoredTokens()
     },
-    async login (credentials) {
+    async login (credentials: Credentials): Promise<void> {
       const response = await requestToken({
         grant_type: 'password',
         username: credentials.username,
@@ -201,7 +229,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.setTokens(response.data)
     },
-    async refreshToken () {
+    async refreshToken (): Promise<void> {
       if (!this.refreshTokenValue) {
         throw new Error('No refresh token available')
       }
@@ -213,7 +241,7 @@ export const useAuthStore = defineStore('auth', {
 
       this.setTokens(response.data)
     },
-    async logout () {
+    async logout (): Promise<void> {
       const accessToken = this.accessToken
       const refreshToken = this.refreshTokenValue
       const logoutRequests = []
@@ -237,7 +265,7 @@ export const useAuthStore = defineStore('auth', {
 
 let interceptorsRegistered = false
 
-export function setupAuthInterceptors (pinia) {
+export function setupAuthInterceptors (pinia: Parameters<typeof useAuthStore>[0]): void {
   if (interceptorsRegistered) {
     return
   }
@@ -246,8 +274,8 @@ export function setupAuthInterceptors (pinia) {
 
   axios.interceptors.response.use(
     (response) => response,
-    async (error) => {
-      const originalRequest = error?.config
+    async (error: AxiosError) => {
+      const originalRequest = error.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined
       const requestUrl = originalRequest?.url ?? ''
 
       if (

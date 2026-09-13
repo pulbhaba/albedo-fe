@@ -77,7 +77,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/store/auth'
@@ -90,7 +90,7 @@ const { t } = useI18n()
 
 const username = ref('')
 const password = ref('')
-const errorMessage = ref(null)
+const errorMessage = ref<string | null>(null)
 
 async function handleLogin () {
   try {

@@ -39,9 +39,11 @@ hosted separately.
 
 ### TypeScript migration
 
-The project uses `tsconfig.json` and the Vue CLI TypeScript plugin. Source
-migration is incremental: new shared modules should use TypeScript, while
-existing JavaScript modules can be migrated in focused changes.
+The project uses `tsconfig.json` and the Vue CLI TypeScript plugin. The
+configuration enables strict checking, the `@/*` source alias, and JSON module
+imports for the locale files. Source migration is incremental: shared modules
+and focused Vue components should use TypeScript, while unrelated JavaScript
+can be migrated in subsequent focused changes.
 
 ### Vue component conventions
 

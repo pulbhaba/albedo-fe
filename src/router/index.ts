@@ -9,6 +9,15 @@ import ForbiddenView from '@/views/ForbiddenView.vue'
 import pinia from '@/store'
 import { useAuthStore } from '@/store/auth'
 
+/* eslint-disable no-unused-vars */
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    roles?: string[]
+  }
+}
+/* eslint-enable no-unused-vars */
+
 const routes = [
   { path: '/', redirect: '/books' },
   { path: '/login', name: 'Login', component: LoginView },

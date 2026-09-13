@@ -86,20 +86,21 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import {
   approvePromotionRequest,
   getApiErrorMessage,
   listPromotionRequests,
   rejectPromotionRequest,
-  ROLE_REQUEST_STATUS
+  ROLE_REQUEST_STATUS,
+  RoleRequest
 } from '@/api/roleRequests'
 
-const requests = ref([])
+const requests = ref<RoleRequest[]>([])
 const isLoading = ref(false)
 const errorMessage = ref('')
-const resolvingRequestId = ref(null)
+const resolvingRequestId = ref<string | number | null>(null)
 
 const pendingRequests = computed(() => {
   return requests.value.filter((request) => request.status === ROLE_REQUEST_STATUS.PENDING)
@@ -118,15 +119,19 @@ async function loadRequests () {
   }
 }
 
-async function approveRequest (request) {
+async function approveRequest (request: RoleRequest): Promise<void> {
   await resolveRequest(request, approvePromotionRequest, 'Approved from promotion queue.')
 }
 
-async function rejectRequest (request) {
+async function rejectRequest (request: RoleRequest): Promise<void> {
   await resolveRequest(request, rejectPromotionRequest, 'Rejected from promotion queue.')
 }
 
-async function resolveRequest (request, action, reason) {
+async function resolveRequest (
+  request: RoleRequest,
+  action: (requestId: string | number, reason: string) => Promise<RoleRequest>,
+  reason: string
+): Promise<void> {
   if (resolvingRequestId.value) {
     return
   }
@@ -144,17 +149,17 @@ async function resolveRequest (request, action, reason) {
   }
 }
 
-function replaceRequest (updatedRequest) {
+function replaceRequest (updatedRequest: RoleRequest): void {
   requests.value = requests.value.map((request) =>
     request.id === updatedRequest.id ? updatedRequest : request
   )
 }
 
-function displayName (request) {
+function displayName (request: RoleRequest): string {
   return [request.firstName, request.lastName].filter(Boolean).join(' ') || request.username
 }
 
-function statusLabel (status) {
+function statusLabel (status: string): string {
   if (!status) {
     return ''
   }
@@ -162,7 +167,7 @@ function statusLabel (status) {
   return status.charAt(0) + status.slice(1).toLowerCase()
 }
 
-function resolvedLabel (request) {
+function resolvedLabel (request: RoleRequest): string {
   if (!request.resolvedAt) {
     return ''
   }
@@ -173,7 +178,7 @@ function resolvedLabel (request) {
   }).format(new Date(request.resolvedAt))
 }
 
-function statusClass (status) {
+function statusClass (status: string): string {
   if (status === ROLE_REQUEST_STATUS.APPROVED) {
     return 'bg-blue-2/10 text-blue-2'
   }
