@@ -11,6 +11,12 @@ module.exports = {
     ecmaVersion: 12,
     sourceType: 'module'
   },
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+      parser: '@typescript-eslint/parser'
+    }
+  ],
   plugins: [
     'vue'
   ],
