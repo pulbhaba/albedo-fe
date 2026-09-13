@@ -37,6 +37,12 @@ library operations use `/library`. Local development proxies both paths to
 `VUE_NOVELS_PROXY_TARGET`; set `VUE_NOVELS_API_URL` when the novels service is
 hosted separately.
 
+### TypeScript migration
+
+The project uses `tsconfig.json` and the Vue CLI TypeScript plugin. Source
+migration is incremental: new shared modules should use TypeScript, while
+existing JavaScript modules can be migrated in focused changes.
+
 ### Compiles and hot-reloads for development
 ```
 npm run serve
