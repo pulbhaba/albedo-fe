@@ -37,6 +37,14 @@ library operations use `/library`. Local development proxies both paths to
 `VUE_NOVELS_PROXY_TARGET`; set `VUE_NOVELS_API_URL` when the novels service is
 hosted separately.
 
+### Manuscript editor
+
+Books supports creating a draft and opening its editor at
+`/manuscripts/:novelId`. The editor saves draft metadata and the first chapter
+through the novels API. See [the manual smoke check](docs/manuscript-editor-smoke-check.md)
+for the owner, non-owner, and save-error checks. The current API has no chapter
+catalog, so the editor uses the stable ID `chapter-1`.
+
 ### TypeScript migration
 
 The project uses `tsconfig.json` and the Vue CLI TypeScript plugin. The

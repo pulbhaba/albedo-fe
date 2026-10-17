@@ -4,6 +4,7 @@ import DashboardView from '@/views/DashboardView.vue'
 import BooksView from '@/views/BooksView.vue'
 import LibraryView from '@/views/LibraryView.vue'
 import NovelReaderView from '@/views/NovelReaderView.vue'
+import ManuscriptEditorView from '@/views/ManuscriptEditorView.vue'
 import PromotionApprovalsView from '@/views/PromotionApprovalsView.vue'
 import ForbiddenView from '@/views/ForbiddenView.vue'
 import pinia from '@/store'
@@ -24,6 +25,7 @@ const routes = [
   { path: '/books', name: 'Books', component: BooksView, meta: { requiresAuth: true } },
   { path: '/library', name: 'Library', component: LibraryView, meta: { requiresAuth: true } },
   { path: '/books/:novelId', name: 'NovelReader', component: NovelReaderView, meta: { requiresAuth: true } },
+  { path: '/manuscripts/:novelId', name: 'ManuscriptEditor', component: ManuscriptEditorView, meta: { requiresAuth: true } },
   { path: '/dashboard', name: 'Dashboard', component: DashboardView, meta: { requiresAuth: true } },
   {
     path: '/promotions',

@@ -34,6 +34,51 @@
       </div>
     </section>
 
+    <section v-if="creatingDraft" class="rounded-lg border border-black-4 bg-black-2 p-5 shadow-sm">
+      <h2 class="text-xl font-semibold text-gray-1">Start a manuscript</h2>
+      <form class="mt-4 grid gap-4 md:grid-cols-2" @submit.prevent="createManuscript">
+        <label class="block text-sm font-medium text-gray-2">
+          Title
+          <input
+            v-model="draftTitle"
+            class="mt-2 w-full rounded-md border border-black-4 bg-black-1 px-3 py-2 text-gray-1"
+            autocomplete="off"
+            maxlength="255"
+            required
+          >
+        </label>
+        <label class="block text-sm font-medium text-gray-2">
+          ISBN <span class="font-normal">(optional)</span>
+          <input
+            v-model="draftIsbn"
+            class="mt-2 w-full rounded-md border border-black-4 bg-black-1 px-3 py-2 text-gray-1"
+            autocomplete="off"
+            maxlength="32"
+          >
+        </label>
+        <p v-if="draftCreateError" class="text-sm text-red-1 md:col-span-2" role="alert">
+          {{ draftCreateError }}
+        </p>
+        <div class="flex gap-2 md:col-span-2">
+          <button
+            type="submit"
+            class="rounded-md bg-blue-2 px-4 py-2 text-sm font-medium text-white hover:bg-blue-1 disabled:cursor-not-allowed disabled:opacity-60"
+            :disabled="draftSubmitting || !draftTitle.trim()"
+          >
+            {{ draftSubmitting ? 'Creating…' : 'Create manuscript' }}
+          </button>
+          <button
+            type="button"
+            class="rounded-md border border-black-4 px-4 py-2 text-sm font-medium text-gray-1 hover:bg-black-3"
+            :disabled="draftSubmitting"
+            @click="cancelDraft"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </section>
+
     <div
       v-if="activeNotice"
       class="rounded-lg border border-blue-2/30 bg-blue-2/10 px-4 py-3 text-sm font-medium text-blue-2"
@@ -172,7 +217,7 @@ import {
   ROLE_REQUEST_STATUS,
   RoleRequest
 } from '@/api/roleRequests'
-import { getNovelsApiError, listNovels, Novel } from '@/api/novels'
+import { createNovel, getNovelApiError, getNovelsApiError, listNovels, Novel } from '@/api/novels'
 import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'vue-router'
 
@@ -185,6 +230,11 @@ const novels = ref<Novel[]>([])
 const novelsLoading = ref(true)
 const novelsError = ref('')
 const activeNotice = ref('')
+const creatingDraft = ref(false)
+const draftTitle = ref('')
+const draftIsbn = ref('')
+const draftCreateError = ref('')
+const draftSubmitting = ref(false)
 const roleRequests = ref<RoleRequest[]>([])
 const roleRequestsLoading = ref(false)
 const roleRequestSubmitting = ref(false)
@@ -287,11 +337,40 @@ function continueReading () {
 }
 
 function startDraft () {
-  activeNotice.value = 'New manuscript started.'
+  creatingDraft.value = true
+  draftTitle.value = ''
+  draftIsbn.value = ''
+  draftCreateError.value = ''
+  activeNotice.value = ''
+}
+
+function cancelDraft () {
+  creatingDraft.value = false
+  draftCreateError.value = ''
+}
+
+async function createManuscript () {
+  const title = draftTitle.value.trim()
+  if (!title || draftSubmitting.value) {
+    return
+  }
+
+  draftSubmitting.value = true
+  draftCreateError.value = ''
+
+  try {
+    const isbn = draftIsbn.value.trim()
+    const novel = await createNovel({ title, ...(isbn ? { isbn } : {}) })
+    await router.push({ name: 'ManuscriptEditor', params: { novelId: novel.id } })
+  } catch (error) {
+    draftCreateError.value = getNovelApiError(error, 'Could not create this manuscript.')
+  } finally {
+    draftSubmitting.value = false
+  }
 }
 
 function editDraft (draft: Novel): void {
-  activeNotice.value = `${draft.title} opened for writing.`
+  router.push({ name: 'ManuscriptEditor', params: { novelId: draft.id } })
 }
 
 function publishSelectedDraft () {
